@@ -1,0 +1,25 @@
+# --- Secrets: never commit ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+
+# --- OS / editor ---
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- Data files (may be large or contain personal info); keep folder structure only ---
+data/raw/*
+data/cleaned/*
+data/processed/*
+!data/**/.gitkeep
