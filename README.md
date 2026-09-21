@@ -60,6 +60,16 @@ python scripts/apply_schema.py
 
 The script shows which database it will write to and asks for confirmation. It is safe to re-run, and if anything fails nothing is created. Then check the connection with `python scripts/test_connection.py`.
 
+The schema currently covers only the four source systems (`src_pos_*`, `src_digital_*`, `src_product_*`, `src_customer_*`), enough to load the initial synthetic data. Staging, integration/MDM and the data warehouse are added in later pull requests.
+
+If the database still has tables from an earlier version of the schema (`mdm_*`, `gov_*`, `v_*` or old `src_*` tables), the script stops and tells you. On a development database with no real data, remove them and apply the new schema in one step with:
+
+```bash
+python scripts/apply_schema.py --reset
+```
+
+`--reset` deletes those tables **with their data** and asks you to type `reset` first.
+
 Everyone else can skip this section. Change the structure by editing `db/schema.sql` in a pull request.
 
 ## Manual steps team members should know

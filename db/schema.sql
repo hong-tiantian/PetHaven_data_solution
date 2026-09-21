@@ -1,636 +1,229 @@
 -- =====================================================================
--- PetHaven Group - initial database schema (Supabase / PostgreSQL)
--- Run in Supabase Dashboard -> SQL Editor.  Safe to re-run (IF NOT EXISTS).
+-- PetHaven Group - database schema, phase 1: the four source systems
+-- (Supabase / PostgreSQL). Safe to re-run (IF NOT EXISTS).
 --
--- Single source of truth for the database structure: change the DB by
--- editing this file in a pull request, not by clicking around in the dashboard.
+-- Apply with:  python scripts/apply_schema.py
 --
--- THE PROBLEM (Assignment 1 report)
---   P1 customer data is fragmented across POS, digital and the grooming system
---   P2 stock is refreshed at different times, so systems disagree
---   P3 the same customer / product / location has different keys per system
---   P4 orders, order lines and fulfilment can be counted twice
---   P5 shared data has no owner, definition or quality rule
+-- SCOPE OF THIS FILE
+--   Only what is needed to load the initial synthetic data for the four
+--   source systems. Later layers of the agreed architecture (staging,
+--   integration / MDM, data warehouse, governance) are NOT here yet; they are
+--   added in later pull requests, once the synthetic data exists.
 --
--- THE APPROACH (report section 4.5)
---   Keep the four source systems as they are (src_*), then add a
---   registry-style master data layer (mdm_*) that maps every source key to
---   one master ID WITHOUT changing the source records, plus a small
---   governance layer (gov_*). Reporting (data vault / dimensional) is
---   deliberately NOT built yet: the report says to wait until master data
---   is stable.
+-- THE FOUR SOURCES (each is its own "system" with its own keys)
+--   src_pos_*       SRC_POS       in-store point of sale
+--   src_digital_*   SRC_DIGITAL   website and mobile app
+--   src_product_*   SRC_PRODUCT   inventory / ERP (items and stock by location)
+--   src_customer_*  SRC_CUSTOMER  customer and pet service system
 --
--- LAYERS (table prefix -> layer). Prefixes are used instead of Postgres
--- schemas so that supabase-py can reach every table without extra API settings.
+-- RULES
+--   * Each source keeps its OWN keys and its own copy of customers, products
+--     and locations, on purpose: the systems share no identifiers (report
+--     problems P1 and P3). Matching them is the job of the later MDM layer.
+--   * Foreign keys exist only INSIDE one source, never between sources.
+--     Cross-source references (e.g. a POS pickup naming a web order) are
+--     plain text columns.
+--   * Stock tables hold the current state only.
+--   * Table prefixes in the public schema (not separate Postgres schemas) so
+--     supabase-py reaches every table without extra API settings.
+--   * Text CHECK constraints instead of enums; identity columns are
+--     "BY DEFAULT" so the synthetic data generator can load its own IDs.
 --
---   src_pos_*       SRC_POS       in-store POS
---   src_digital_*   SRC_DIGITAL   web + mobile app
---   src_product_*   SRC_PRODUCT   inventory / ERP (items, stock, suppliers)
---   src_customer_*  SRC_CUSTOMER  customer & pet service system (grooming bookings)
---   mdm_*           master data   cross-reference (registry) tables
---   gov_*           governance    owners and business definitions
---   v_*             views         the integrated answers (stock, orders)
---
--- SOURCE-LAYER RULES
---   * Each source keeps its OWN keys and its own copy of customers / products /
---     locations, on purpose: that is exactly what P1 and P3 describe.
---   * No foreign keys between different sources (real systems have none).
---     Sources are linked only through the mdm_* cross-reference tables.
---   * Every source table has loaded_at (when the row was loaded here), so
---     lineage is not lost.
---   * Stock tables hold CURRENT state only; history belongs to the later
---     reporting layer.
+-- Removing tables from an older version of this schema (mdm_*, gov_*, v_*):
+--   python scripts/apply_schema.py --reset      (development database only)
 -- =====================================================================
 
 
--- ---------------------------------------------------------------------
--- IF YOU RAN AN EARLIER VERSION OF THIS FILE: it used some of the same table
--- names with different columns, and CREATE TABLE IF NOT EXISTS would silently
--- keep the old ones. On a dev database with no real data, uncomment and run
--- this block once first.
--- ---------------------------------------------------------------------
--- drop table if exists
---   public.animals,
---   public.src_customer_pets, public.src_customer_customers,
---   public.src_product_inventory, public.src_product_products,
---   public.src_product_categories, public.src_product_brands,
---   public.src_pos_transaction_items, public.src_pos_transactions, public.src_pos_stores,
---   public.src_digital_order_items, public.src_digital_orders
--- cascade;
-
-
 -- =====================================================================
--- SRC_POS : in-store point of sale
--- holds: transactions, local stock, product codes, loyalty registrations,
---        click & collect records
+-- SRC_POS  -  in-store point of sale
+-- Holds: sales and their lines, local stock, loyalty members, click and
+-- collect pickups. Products are known here only by the POS product code.
 -- =====================================================================
 create table if not exists public.src_pos_stores (
-  store_code  text primary key,                  -- POS's own store code
-  store_name  text not null,
+  store_id    bigint generated by default as identity primary key,
+  store_name  text not null unique,
   suburb      text,
-  postcode    text,
-  loaded_at   timestamptz not null default now()
+  state       text
 );
 
--- POS has its own product codes (differ from ERP and digital: P3).
-create table if not exists public.src_pos_products (
-  pos_product_code  text primary key,
-  product_name      text not null,
-  category          text,
-  unit_price        numeric(10, 2) check (unit_price >= 0),
-  loaded_at         timestamptz not null default now()
-);
-
--- Loyalty registrations made at the till (not linked to online sign-up: P1).
 create table if not exists public.src_pos_loyalty_members (
-  pos_member_id          bigint generated by default as identity primary key,
-  first_name             text,
-  last_name              text,
-  phone                  text,
-  email                  text,
-  postcode               text,
-  registered_store_code  text references public.src_pos_stores (store_code),
-  registered_at          timestamptz,
-  loaded_at              timestamptz not null default now()
-);
-
-create table if not exists public.src_pos_transactions (
-  transaction_id  bigint generated by default as identity primary key,
-  store_code      text not null references public.src_pos_stores (store_code),
-  transaction_ts  timestamptz not null,
-  pos_member_id   bigint references public.src_pos_loyalty_members (pos_member_id),  -- null = unidentified in-store customer
-  payment_method  text check (payment_method in ('card', 'cash', 'gift_card', 'other')),
-  total_amount    numeric(12, 2) not null check (total_amount >= 0),
-  loaded_at       timestamptz not null default now()
-);
-
-create table if not exists public.src_pos_transaction_lines (
-  line_id           bigint generated by default as identity primary key,
-  transaction_id    bigint not null
-                    references public.src_pos_transactions (transaction_id) on delete cascade,
-  pos_product_code  text not null references public.src_pos_products (pos_product_code),
-  quantity          integer not null check (quantity > 0),
-  unit_price        numeric(10, 2) not null check (unit_price >= 0),
-  discount_amount   numeric(10, 2) not null default 0 check (discount_amount >= 0),
-  loaded_at         timestamptz not null default now()
-);
-
--- Real-time locally, invisible to other stores (P2).
-create table if not exists public.src_pos_local_stock (
-  store_code         text not null references public.src_pos_stores (store_code),
-  pos_product_code   text not null references public.src_pos_products (pos_product_code),
-  quantity_on_hand   integer not null check (quantity_on_hand >= 0),
-  last_updated       timestamptz not null,
-  loaded_at          timestamptz not null default now(),
-  primary key (store_code, pos_product_code)
-);
-
--- Pick-up of an ONLINE order at a store. This is not a sale by itself:
--- the sale lives in src_digital_orders. Whether it counts as an in-store or an
--- online sale is a business decision (see gov_business_definition).
-create table if not exists public.src_pos_click_collect (
-  collect_id        bigint generated by default as identity primary key,
-  digital_order_id  text not null,               -- order id in SRC_DIGITAL (plain text, no cross-system FK)
-  store_code        text not null references public.src_pos_stores (store_code),
-  status            text not null default 'ready' check (status in ('ready', 'collected', 'cancelled')),
-  ready_at          timestamptz,
-  collected_at      timestamptz,
-  loaded_at         timestamptz not null default now()
-);
-
-create index if not exists idx_src_pos_loyalty_phone  on public.src_pos_loyalty_members (phone);
-create index if not exists idx_src_pos_loyalty_email  on public.src_pos_loyalty_members (lower(email));
-create index if not exists idx_src_pos_txn_ts         on public.src_pos_transactions (transaction_ts);
-create index if not exists idx_src_pos_txn_member     on public.src_pos_transactions (pos_member_id);
-create index if not exists idx_src_pos_lines_txn      on public.src_pos_transaction_lines (transaction_id);
-create index if not exists idx_src_pos_lines_product  on public.src_pos_transaction_lines (pos_product_code);
-create index if not exists idx_src_pos_cc_order       on public.src_pos_click_collect (digital_order_id);
-
-
--- =====================================================================
--- SRC_DIGITAL : website + mobile app
--- holds: online orders, customer accounts, pet profiles, product catalogue,
---        an overnight copy of central inventory
--- =====================================================================
-create table if not exists public.src_digital_accounts (
-  account_id         bigint generated by default as identity primary key,
-  first_name         text,
-  last_name          text,
-  email              text,
-  phone              text,
-  postcode           text,
-  online_loyalty_id  text,                       -- separate from the in-store loyalty registration (P1)
-  signup_channel     text check (signup_channel in ('web', 'app')),
-  created_at         timestamptz,
-  loaded_at          timestamptz not null default now()
-);
-
-create table if not exists public.src_digital_pets (
-  pet_profile_id  bigint generated by default as identity primary key,
-  account_id      bigint not null references public.src_digital_accounts (account_id) on delete cascade,
-  name            text,
-  species         text not null
-                  check (species in ('dog', 'cat', 'bird', 'fish', 'small_animal', 'reptile', 'other')),
-  breed           text,
-  birth_date      date,
-  weight_kg       numeric(6, 2) check (weight_kg > 0),
-  notes           text,
-  loaded_at       timestamptz not null default now()
-);
-
-create table if not exists public.src_digital_products (
-  web_sku       text primary key,                -- digital's own product code
-  product_name  text not null,
-  category      text,
-  price         numeric(10, 2) check (price >= 0),
-  is_active     boolean not null default true,
-  loaded_at     timestamptz not null default now()
-);
-
--- Copy of central inventory, refreshed overnight (P2). One row per SKU per
--- location; the overnight refresh replaces the rows.
-create table if not exists public.src_digital_inventory_snapshot (
-  web_sku             text not null references public.src_digital_products (web_sku),
-  location_code       text not null,             -- digital's own location code
-  quantity_available  integer not null check (quantity_available >= 0),
-  snapshot_at         timestamptz not null,
-  loaded_at           timestamptz not null default now(),
-  primary key (web_sku, location_code)
-);
-
-create table if not exists public.src_digital_orders (
-  order_id              bigint generated by default as identity primary key,
-  account_id            bigint references public.src_digital_accounts (account_id),  -- null = guest checkout
-  channel               text not null check (channel in ('web', 'app')),
-  order_ts              timestamptz not null,
-  fulfilment_type       text check (fulfilment_type in ('home_delivery', 'click_and_collect')),
-  pickup_location_code  text,                    -- for click & collect
-  order_status          text not null default 'placed'
-                        check (order_status in ('placed', 'picking', 'partially_fulfilled', 'fulfilled', 'cancelled')),
-  total_amount          numeric(12, 2) not null check (total_amount >= 0),
-  loaded_at             timestamptz not null default now()
-);
-
--- Each line has its own fulfilment location, so one order can be filled from
--- several locations (split fulfilment). That is the P4 double-counting risk.
-create table if not exists public.src_digital_order_lines (
-  order_line_id             bigint generated by default as identity primary key,
-  order_id                  bigint not null references public.src_digital_orders (order_id) on delete cascade,
-  web_sku                   text not null references public.src_digital_products (web_sku),
-  quantity                  integer not null check (quantity > 0),
-  unit_price                numeric(10, 2) not null check (unit_price >= 0),
-  discount_amount           numeric(10, 2) not null default 0 check (discount_amount >= 0),
-  fulfilment_location_code  text,
-  line_status               text not null default 'pending'
-                            check (line_status in ('pending', 'fulfilled', 'out_of_stock', 'cancelled')),
-  loaded_at                 timestamptz not null default now()
-);
-
-create index if not exists idx_src_digital_accounts_phone  on public.src_digital_accounts (phone);
-create index if not exists idx_src_digital_accounts_email  on public.src_digital_accounts (lower(email));
-create index if not exists idx_src_digital_pets_account    on public.src_digital_pets (account_id);
-create index if not exists idx_src_digital_orders_ts       on public.src_digital_orders (order_ts);
-create index if not exists idx_src_digital_orders_account  on public.src_digital_orders (account_id);
-create index if not exists idx_src_digital_lines_order     on public.src_digital_order_lines (order_id);
-create index if not exists idx_src_digital_lines_sku       on public.src_digital_order_lines (web_sku);
-
-
--- =====================================================================
--- SRC_PRODUCT : inventory / ERP
--- holds: central + distribution centre stock, items, suppliers
--- (purchase orders are left out of this first version)
--- =====================================================================
-create table if not exists public.src_product_suppliers (
-  supplier_id    bigint generated by default as identity primary key,
-  supplier_name  text not null,
-  contact_email  text,
-  loaded_at      timestamptz not null default now()
-);
-
-create table if not exists public.src_product_items (
-  erp_item_code  text primary key,               -- ERP's own item code
-  item_name      text not null,
-  category       text,
-  brand          text,
-  supplier_id    bigint references public.src_product_suppliers (supplier_id),
-  cost_price     numeric(10, 2) check (cost_price >= 0),
-  list_price     numeric(10, 2) check (list_price >= 0),
-  is_active      boolean not null default true,
-  loaded_at      timestamptz not null default now()
-);
-
--- The ERP identifies a location only by name: there is NO location code (P3).
-create table if not exists public.src_product_locations (
-  erp_location_id  bigint generated by default as identity primary key,
-  location_name    text not null unique,
-  location_type    text not null check (location_type in ('store', 'dc')),
-  loaded_at        timestamptz not null default now()
-);
-
--- Distribution centre stock is updated hourly, store movements overnight (P2),
--- so last_updated tells you how much to trust each row.
-create table if not exists public.src_product_inventory (
-  inventory_id      bigint generated by default as identity primary key,
-  erp_item_code     text not null references public.src_product_items (erp_item_code),
-  erp_location_id   bigint not null references public.src_product_locations (erp_location_id),
-  quantity_on_hand  integer not null check (quantity_on_hand >= 0),
-  last_updated      timestamptz not null,
-  loaded_at         timestamptz not null default now(),
-  unique (erp_item_code, erp_location_id)
-);
-
-create index if not exists idx_src_product_items_supplier on public.src_product_items (supplier_id);
-create index if not exists idx_src_product_inventory_loc  on public.src_product_inventory (erp_location_id);
-
-
--- =====================================================================
--- SRC_CUSTOMER : customer & pet service system (external grooming provider)
--- holds: customer records, pets (with health / behaviour notes), bookings.
--- Manual records only, no automated integration.
--- =====================================================================
-create table if not exists public.src_customer_customers (
-  customer_id  bigint generated by default as identity primary key,
-  first_name   text,
-  last_name    text,
-  phone        text,
-  email        text,
-  postcode     text,
-  created_at   timestamptz,
-  loaded_at    timestamptz not null default now()
-);
-
--- Health and behaviour notes matter: merging two different pets by mistake
--- would mix up allergy / behaviour information (report section 4.4).
-create table if not exists public.src_customer_pets (
-  pet_id           bigint generated by default as identity primary key,
-  customer_id      bigint not null references public.src_customer_customers (customer_id) on delete cascade,
-  name             text,
-  species          text not null
-                   check (species in ('dog', 'cat', 'bird', 'fish', 'small_animal', 'reptile', 'other')),
-  breed            text,
-  birth_date       date,
-  weight_kg        numeric(6, 2) check (weight_kg > 0),
-  health_notes     text,
-  behaviour_notes  text,
-  loaded_at        timestamptz not null default now()
-);
-
--- The provider knows a location only by the store's name (free text).
-create table if not exists public.src_customer_bookings (
-  booking_id      bigint generated by default as identity primary key,
-  customer_id     bigint not null references public.src_customer_customers (customer_id),
-  pet_id          bigint references public.src_customer_pets (pet_id),
-  store_name      text not null,
-  service_type    text not null
-                  check (service_type in ('bath', 'haircut', 'full_groom', 'nail_trim', 'other')),
-  booked_at       timestamptz,
-  appointment_ts  timestamptz not null,
-  booking_status  text not null default 'booked'
-                  check (booking_status in ('booked', 'completed', 'cancelled', 'no_show')),
-  grooming_notes  text,
-  loaded_at       timestamptz not null default now()
-);
-
-create index if not exists idx_src_customer_customers_phone  on public.src_customer_customers (phone);
-create index if not exists idx_src_customer_customers_email  on public.src_customer_customers (lower(email));
-create index if not exists idx_src_customer_pets_customer    on public.src_customer_pets (customer_id);
-create index if not exists idx_src_customer_bookings_cust    on public.src_customer_bookings (customer_id);
-create index if not exists idx_src_customer_bookings_appt    on public.src_customer_bookings (appointment_ts);
-
-
--- =====================================================================
--- MDM : master data, registry style (report 4.3.1 and 4.5.3)
--- Source records stay where they are. These tables only map each source key
--- to ONE master ID, so the source systems keep running unchanged.
--- Solves P1 (one customer view) and P3 (common identifiers).
--- =====================================================================
-
--- ----- customer ------------------------------------------------------
--- Values here are chosen by the survivorship rules below.
-create table if not exists public.mdm_customer_master (
-  master_customer_id  bigint generated by default as identity primary key,
+  member_no           text primary key,
   first_name          text,
   last_name           text,
   email               text,
   phone               text,
   postcode            text,
-  loyalty_member      boolean not null default false,
-  created_at          timestamptz not null default now(),
-  updated_at          timestamptz not null default now()
+  registered_store_id bigint references public.src_pos_stores (store_id),
+  registered_at       timestamptz not null default now()
 );
 
--- The cross-reference table: many source records -> one master customer.
--- A source record can be linked to at most one master (unique constraint).
-create table if not exists public.mdm_customer_xref (
-  xref_id             bigint generated by default as identity primary key,
-  master_customer_id  bigint not null references public.mdm_customer_master (master_customer_id) on delete cascade,
-  source_system       text not null check (source_system in ('pos', 'digital', 'customer')),
-  source_customer_id  text not null,             -- pos_member_id / account_id / customer_id, as text
-  link_type           text not null check (link_type in ('auto', 'steward_confirmed')),
-  match_score         numeric(4, 3) check (match_score between 0 and 1),
-  linked_at           timestamptz not null default now(),
-  linked_by           text,
-  unique (source_system, source_customer_id)
+create table if not exists public.src_pos_sales (
+  sale_id   bigint generated by default as identity primary key,
+  store_id  bigint not null references public.src_pos_stores (store_id),
+  member_no text references public.src_pos_loyalty_members (member_no),  -- null = walk-in
+  sold_at   timestamptz not null
 );
-create index if not exists idx_mdm_customer_xref_master on public.mdm_customer_xref (master_customer_id);
 
--- ----- pet -----------------------------------------------------------
-create table if not exists public.mdm_pet_master (
-  master_pet_id    bigint generated by default as identity primary key,
-  name             text,
-  species          text not null
-                   check (species in ('dog', 'cat', 'bird', 'fish', 'small_animal', 'reptile', 'other')),
+create table if not exists public.src_pos_sale_lines (
+  sale_line_id        bigint generated by default as identity primary key,
+  sale_id             bigint not null references public.src_pos_sales (sale_id) on delete cascade,
+  product_code        text not null,          -- POS product code
+  product_description text,
+  quantity            integer not null check (quantity > 0),
+  unit_price          numeric(10,2) not null check (unit_price >= 0)
+);
+
+create table if not exists public.src_pos_stock (
+  store_id         bigint not null references public.src_pos_stores (store_id),
+  product_code     text not null,
+  quantity_on_hand integer not null check (quantity_on_hand >= 0),
+  counted_at       timestamptz not null,
+  primary key (store_id, product_code)
+);
+
+-- A click and collect order picked up in store. web_order_no names the order
+-- in SRC_DIGITAL as plain text (no foreign key between systems).
+create table if not exists public.src_pos_pickups (
+  pickup_id     bigint generated by default as identity primary key,
+  store_id      bigint not null references public.src_pos_stores (store_id),
+  web_order_no  text not null,
+  picked_up_at  timestamptz not null
+);
+
+
+-- =====================================================================
+-- SRC_DIGITAL  -  website and mobile app
+-- Holds: customer accounts, pet profiles, product catalogue, orders and
+-- lines, and a stock snapshot refreshed overnight. Names locations as text.
+-- =====================================================================
+create table if not exists public.src_digital_customers (
+  account_id  bigint generated by default as identity primary key,
+  email       text not null unique,
+  first_name  text,
+  last_name   text,
+  phone       text,
+  created_at  timestamptz not null default now()
+);
+
+create table if not exists public.src_digital_pets (
+  pet_id      bigint generated by default as identity primary key,
+  account_id  bigint not null references public.src_digital_customers (account_id) on delete cascade,
+  name        text not null,
+  species     text not null check (species in ('dog','cat','bird','fish','small_animal','reptile','other')),
+  breed       text,
+  birth_date  date
+);
+
+create table if not exists public.src_digital_products (
+  sku       text primary key,
+  name      text not null,
+  brand     text,
+  category  text,
+  price     numeric(10,2) not null check (price >= 0)
+);
+
+create table if not exists public.src_digital_orders (
+  order_no         text primary key,
+  account_id       bigint references public.src_digital_customers (account_id),  -- null = guest checkout
+  ordered_at       timestamptz not null,
+  status           text not null check (status in ('placed','fulfilled','cancelled')),
+  delivery_method  text not null check (delivery_method in ('delivery','click_and_collect')),
+  pickup_store     text                    -- store NAME, only for click and collect
+);
+
+create table if not exists public.src_digital_order_lines (
+  order_line_id         bigint generated by default as identity primary key,
+  order_no              text not null references public.src_digital_orders (order_no) on delete cascade,
+  sku                   text not null references public.src_digital_products (sku),
+  quantity              integer not null check (quantity > 0),
+  unit_price            numeric(10,2) not null check (unit_price >= 0),
+  fulfilment_location   text,              -- store name or distribution centre, as text
+  line_status           text not null check (line_status in ('pending','shipped','collected','cancelled'))
+);
+
+create table if not exists public.src_digital_stock_snapshot (
+  sku           text not null references public.src_digital_products (sku),
+  location_name text not null,
+  quantity      integer not null check (quantity >= 0),
+  snapshot_at   timestamptz not null,
+  primary key (sku, location_name)
+);
+
+
+-- =====================================================================
+-- SRC_PRODUCT  -  inventory / ERP
+-- Holds: items and stock by location (stores and the distribution centre).
+-- Locations are identified by name only, with no location code.
+-- Suppliers and purchase orders are out of scope for this phase.
+-- =====================================================================
+create table if not exists public.src_product_items (
+  item_code   text primary key,
+  item_name   text not null,
+  brand       text,
+  category    text,
+  unit_cost   numeric(10,2) check (unit_cost >= 0),
+  list_price  numeric(10,2) check (list_price >= 0)
+);
+
+create table if not exists public.src_product_stock (
+  item_code         text not null references public.src_product_items (item_code),
+  location_name     text not null,
+  location_type     text not null check (location_type in ('store','dc')),
+  quantity_on_hand  integer not null check (quantity_on_hand >= 0),
+  updated_at        timestamptz not null,
+  primary key (item_code, location_name)
+);
+
+
+-- =====================================================================
+-- SRC_CUSTOMER  -  customer and pet service system
+-- Holds: customers and their pets, with health and behaviour notes.
+-- Grooming bookings are out of scope for this phase.
+-- =====================================================================
+create table if not exists public.src_customer_customers (
+  customer_no  text primary key,
+  first_name   text,
+  last_name    text,
+  email        text,
+  phone        text,
+  postcode     text,
+  created_at   timestamptz not null default now()
+);
+
+create table if not exists public.src_customer_pets (
+  pet_id           bigint generated by default as identity primary key,
+  customer_no      text not null references public.src_customer_customers (customer_no) on delete cascade,
+  name             text not null,
+  species          text not null check (species in ('dog','cat','bird','fish','small_animal','reptile','other')),
   breed            text,
   birth_date       date,
-  weight_kg        numeric(6, 2) check (weight_kg > 0),
   health_notes     text,
-  behaviour_notes  text,
-  updated_at       timestamptz not null default now()
-);
-
-create table if not exists public.mdm_pet_xref (
-  xref_id         bigint generated by default as identity primary key,
-  master_pet_id   bigint not null references public.mdm_pet_master (master_pet_id) on delete cascade,
-  source_system   text not null check (source_system in ('digital', 'customer')),   -- POS holds no pets
-  source_pet_id   text not null,                 -- pet_profile_id / pet_id, as text
-  link_type       text not null check (link_type in ('auto', 'steward_confirmed')),
-  match_score     numeric(4, 3) check (match_score between 0 and 1),
-  linked_at       timestamptz not null default now(),
-  linked_by       text,
-  unique (source_system, source_pet_id)
-);
-create index if not exists idx_mdm_pet_xref_master on public.mdm_pet_xref (master_pet_id);
-
--- Customer <-> pet is MANY-TO-MANY (report Table 2): a customer can have several
--- pets, and a pet can belong to several household members.
-create table if not exists public.mdm_customer_pet (
-  master_customer_id  bigint not null references public.mdm_customer_master (master_customer_id) on delete cascade,
-  master_pet_id       bigint not null references public.mdm_pet_master (master_pet_id) on delete cascade,
-  relationship        text not null default 'primary_owner'
-                      check (relationship in ('primary_owner', 'household_member', 'other')),
-  primary key (master_customer_id, master_pet_id)
-);
-create index if not exists idx_mdm_customer_pet_pet on public.mdm_customer_pet (master_pet_id);
-
--- ----- product ---------------------------------------------------------
-create table if not exists public.mdm_product_master (
-  master_product_id  bigint generated by default as identity primary key,
-  product_name       text not null,
-  category           text,
-  brand              text,
-  is_active          boolean not null default true,
-  created_at         timestamptz not null default now()
-);
-
--- POS code / web SKU / ERP item code -> one master product (UC3).
-create table if not exists public.mdm_product_xref (
-  xref_id              bigint generated by default as identity primary key,
-  master_product_id    bigint not null references public.mdm_product_master (master_product_id) on delete cascade,
-  source_system        text not null check (source_system in ('pos', 'digital', 'product')),
-  source_product_code  text not null,
-  link_type            text not null check (link_type in ('auto', 'steward_confirmed')),
-  match_score          numeric(4, 3) check (match_score between 0 and 1),
-  linked_at            timestamptz not null default now(),
-  linked_by            text,
-  unique (source_system, source_product_code)
-);
-create index if not exists idx_mdm_product_xref_master on public.mdm_product_xref (master_product_id);
-
--- ----- location --------------------------------------------------------
--- A common location code for stores and distribution centres.
-create table if not exists public.mdm_location_master (
-  location_code  text primary key,               -- e.g. S001, DC01
-  location_name  text not null,
-  location_type  text not null check (location_type in ('store', 'dc')),
-  suburb         text,
-  postcode       text,
-  is_active      boolean not null default true
-);
-
--- POS store_code / digital location_code / ERP location id (by name) / grooming store name
--- -> one common location code.
-create table if not exists public.mdm_location_xref (
-  xref_id             bigint generated by default as identity primary key,
-  location_code       text not null references public.mdm_location_master (location_code) on delete cascade,
-  source_system       text not null check (source_system in ('pos', 'digital', 'product', 'customer')),
-  source_location_key text not null,             -- store_code / location_code / erp_location_id / store_name, as text
-  unique (source_system, source_location_key)
-);
-create index if not exists idx_mdm_location_xref_loc on public.mdm_location_xref (location_code);
-
--- ----- match review queue ---------------------------------------------
--- Report 4.5.3: high-confidence pairs are linked automatically, low-confidence
--- pairs are left alone, middle-band pairs go to a named steward. Rules should
--- lean towards UNDER-merging (a wrong merge can attach one customer's notes
--- to another). The pairs also form a graph of "possibly the same" links.
-create table if not exists public.mdm_match_candidate (
-  candidate_id       bigint generated by default as identity primary key,
-  entity_type        text not null check (entity_type in ('customer', 'pet', 'product')),
-  source_system_a    text not null check (source_system_a in ('pos', 'digital', 'product', 'customer')),
-  source_id_a        text not null,
-  source_system_b    text not null check (source_system_b in ('pos', 'digital', 'product', 'customer')),
-  source_id_b        text not null,
-  match_rule         text,                       -- e.g. 'same_phone', 'same_email'
-  match_score        numeric(4, 3) not null check (match_score between 0 and 1),
-  band               text not null check (band in ('high', 'middle', 'low')),
-  status             text not null default 'pending'
-                     check (status in ('pending', 'confirmed', 'rejected', 'auto_linked')),
-  reviewed_by        text,
-  reviewed_at        timestamptz,
-  created_at         timestamptz not null default now(),
-  check ((source_system_a, source_id_a) <> (source_system_b, source_id_b)),
-  unique (entity_type, source_system_a, source_id_a, source_system_b, source_id_b)
-);
-create index if not exists idx_mdm_match_candidate_queue on public.mdm_match_candidate (status, band);
-
--- Which system's value wins when records disagree (survivorship, Otto 2012).
-create table if not exists public.mdm_survivorship_rule (
-  rule_id                bigint generated by default as identity primary key,
-  entity_type            text not null check (entity_type in ('customer', 'pet', 'product')),
-  attribute_name         text not null,
-  rule_type              text not null check (rule_type in ('most_recent', 'source_priority')),
-  preferred_source_system text check (preferred_source_system in ('pos', 'digital', 'product', 'customer')),
-  description            text,
-  unique (entity_type, attribute_name)
+  behaviour_notes  text
 );
 
 
 -- =====================================================================
--- GOV : governance (P5, UC6)
+-- INDEXES on foreign-key columns (Postgres does not create these itself)
 -- =====================================================================
--- One row per shared data domain. owner_team / steward are left NULL on purpose:
--- naming them is a business decision and the report's first recommendation.
-create table if not exists public.gov_data_domain (
-  domain_name  text primary key,
-  owner_team   text,
-  steward      text,
-  description  text,
-  updated_at   timestamptz not null default now()
-);
-
--- One agreed meaning per measure, decided by the business (not the data team),
--- e.g. does a Click & Collect order count as a store sale or an online sale?
-create table if not exists public.gov_business_definition (
-  term         text primary key,                 -- e.g. 'sale', 'active_customer', 'click_and_collect_sale_channel'
-  definition   text not null,
-  owner_team   text,
-  decided_at   date,
-  notes        text
-);
-
-
--- =====================================================================
--- SEED DATA (structure only; taken from the report)
--- =====================================================================
-insert into public.gov_data_domain (domain_name, description) values
-  ('customer',  'Customer identity, contact details and loyalty status'),
-  ('pet',       'Pet profiles and customer-pet relationships'),
-  ('product',   'Product master, product codes and prices'),
-  ('inventory', 'Stock quantity by location')
-on conflict do nothing;
-
--- Examples from report 4.5.3. Confirm with the data owners before relying on them.
-insert into public.mdm_survivorship_rule (entity_type, attribute_name, rule_type, preferred_source_system, description) values
-  ('customer', 'email',        'most_recent',     null,       'Contact details come from the most recently updated channel'),
-  ('customer', 'phone',        'most_recent',     null,       'Contact details come from the most recently updated channel'),
-  ('pet',      'health_notes', 'source_priority', 'customer', 'Pet health information comes from the grooming (customer) system')
-on conflict do nothing;
-
-
--- =====================================================================
--- VIEWS : the integrated answers
--- security_invoker = the caller's permissions (and RLS) apply to the
--- underlying tables, so a view can never leak more than its tables allow.
--- Left joins keep rows whose keys are not mapped yet (master id = NULL),
--- which makes missing mappings easy to find.
--- =====================================================================
-
--- UC2 / P2: stock for each master product and location, one row per source
--- system, so disagreements between systems are visible side by side.
-create or replace view public.v_stock_by_location
-with (security_invoker = true) as
-select px.master_product_id, lx.location_code, 'product'::text as source_system,
-       i.quantity_on_hand as quantity, i.last_updated as as_of
-from public.src_product_inventory i
-left join public.mdm_product_xref  px on px.source_system = 'product' and px.source_product_code = i.erp_item_code
-left join public.mdm_location_xref lx on lx.source_system = 'product' and lx.source_location_key = i.erp_location_id::text
-union all
-select px.master_product_id, lx.location_code, 'pos'::text,
-       s.quantity_on_hand, s.last_updated
-from public.src_pos_local_stock s
-left join public.mdm_product_xref  px on px.source_system = 'pos' and px.source_product_code = s.pos_product_code
-left join public.mdm_location_xref lx on lx.source_system = 'pos' and lx.source_location_key = s.store_code
-union all
-select px.master_product_id, lx.location_code, 'digital'::text,
-       d.quantity_available, d.snapshot_at
-from public.src_digital_inventory_snapshot d
-left join public.mdm_product_xref  px on px.source_system = 'digital' and px.source_product_code = d.web_sku
-left join public.mdm_location_xref lx on lx.source_system = 'digital' and lx.source_location_key = d.location_code;
-
--- UC2: the freshest known figure per product and location.
-create or replace view public.v_stock_latest
-with (security_invoker = true) as
-select distinct on (master_product_id, location_code)
-       master_product_id, location_code, source_system, quantity, as_of
-from public.v_stock_by_location
-where master_product_id is not null and location_code is not null
-order by master_product_id, location_code, as_of desc;
-
--- UC4 / P4: every order line from POS and digital in one shape.
--- fulfilment_location_code is per LINE, so split fulfilment stays visible.
-create or replace view public.v_order_lines_unified
-with (security_invoker = true) as
-select 'pos:' || t.transaction_id::text            as order_key,
-       'in_store'::text                            as channel,
-       t.transaction_ts                            as order_ts,
-       'completed'::text                           as order_status,
-       cx.master_customer_id,
-       l.line_id::text                             as line_key,
-       px.master_product_id,
-       l.quantity,
-       (l.quantity * l.unit_price - l.discount_amount) as line_amount,
-       lx.location_code                            as fulfilment_location_code
-from public.src_pos_transaction_lines l
-join public.src_pos_transactions t on t.transaction_id = l.transaction_id
-left join public.mdm_customer_xref cx on cx.source_system = 'pos' and cx.source_customer_id = t.pos_member_id::text
-left join public.mdm_product_xref  px on px.source_system = 'pos' and px.source_product_code = l.pos_product_code
-left join public.mdm_location_xref lx on lx.source_system = 'pos' and lx.source_location_key = t.store_code
-union all
-select 'digital:' || o.order_id::text,
-       o.channel,
-       o.order_ts,
-       o.order_status,
-       cx.master_customer_id,
-       l.order_line_id::text,
-       px.master_product_id,
-       l.quantity,
-       (l.quantity * l.unit_price - l.discount_amount),
-       lx.location_code
-from public.src_digital_order_lines l
-join public.src_digital_orders o on o.order_id = l.order_id
-left join public.mdm_customer_xref cx on cx.source_system = 'digital' and cx.source_customer_id = o.account_id::text
-left join public.mdm_product_xref  px on px.source_system = 'digital' and px.source_product_code = l.web_sku
-left join public.mdm_location_xref lx on lx.source_system = 'digital' and lx.source_location_key = l.fulfilment_location_code;
-
--- UC4 / P4: ONE row per order. A split-fulfilment order still counts once:
--- sum the lines, never the shipments or locations.
-create or replace view public.v_orders_unified
-with (security_invoker = true) as
-select order_key, channel, order_ts, order_status, master_customer_id,
-       sum(line_amount)                          as order_amount,
-       count(*)                                  as line_count,
-       count(distinct fulfilment_location_code)  as fulfilment_location_count,
-       count(distinct fulfilment_location_code) > 1 as is_split_fulfilment
-from public.v_order_lines_unified
-group by order_key, channel, order_ts, order_status, master_customer_id;
+create index if not exists idx_src_pos_loyalty_members_store on public.src_pos_loyalty_members (registered_store_id);
+create index if not exists idx_src_pos_sales_store          on public.src_pos_sales (store_id);
+create index if not exists idx_src_pos_sales_member         on public.src_pos_sales (member_no);
+create index if not exists idx_src_pos_sale_lines_sale      on public.src_pos_sale_lines (sale_id);
+create index if not exists idx_src_pos_sale_lines_product   on public.src_pos_sale_lines (product_code);
+create index if not exists idx_src_pos_pickups_store        on public.src_pos_pickups (store_id);
+create index if not exists idx_src_digital_pets_account     on public.src_digital_pets (account_id);
+create index if not exists idx_src_digital_orders_account   on public.src_digital_orders (account_id);
+create index if not exists idx_src_digital_lines_order      on public.src_digital_order_lines (order_no);
+create index if not exists idx_src_digital_lines_sku        on public.src_digital_order_lines (sku);
+create index if not exists idx_src_customer_pets_customer   on public.src_customer_pets (customer_no);
 
 
 -- =====================================================================
 -- ROW LEVEL SECURITY
--- Enabled on every src_ / mdm_ / gov_ table. With no policies, only the secret
--- key (server-side scripts) can read or write. Customer, pet and booking data
--- is personal information: define access and retention rules before opening
--- any of it to a client app (report 4.4 / 4.5.5).
+-- Enabled on every src_ table. With no policies, only the secret key
+-- (server-side scripts) can read or write. Customer and pet data is personal
+-- information: define access and retention rules before opening any of it to
+-- a client app (report 4.4 / 4.5.5).
 -- =====================================================================
 do $$
 declare
@@ -638,8 +231,7 @@ declare
 begin
   for t in
     select tablename from pg_tables
-    where schemaname = 'public'
-      and (tablename like 'src\_%' or tablename like 'mdm\_%' or tablename like 'gov\_%')
+    where schemaname = 'public' and tablename like 'src\_%'
   loop
     execute format('alter table public.%I enable row level security', t);
   end loop;

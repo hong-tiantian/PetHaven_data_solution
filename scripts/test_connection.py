@@ -21,7 +21,7 @@ def main() -> None:
         if e.code == "PGRST205":
             print(
                 f"Connected to Supabase, but table '{table}' does not exist yet. "
-                "Run db/schema.sql in the Supabase SQL Editor."
+                "Run python scripts/apply_schema.py (or paste db/schema.sql into the Supabase SQL Editor)."
             )
             return
         raise
