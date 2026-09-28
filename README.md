@@ -60,9 +60,9 @@ python scripts/apply_schema.py
 
 The script shows which database it will write to and asks for confirmation. It is safe to re-run, and if anything fails nothing is created. Then check the connection with `python scripts/test_connection.py`.
 
-The schema currently covers only the four source systems (`src_pos_*`, `src_digital_*`, `src_product_*`, `src_customer_*`), enough to load the initial synthetic data. Staging, integration/MDM and the data warehouse are added in later pull requests.
+The schema currently covers only the three UC1 (Customer & Pet Profile) source systems (`src_pos_*`, `src_digital_*`, `src_grooming_*`), enough to load the initial synthetic data. Staging, MDM and the dimensional data warehouse (Silver and Gold layers) are added in later pull requests.
 
-If the database still has tables from an earlier version of the schema (`mdm_*`, `gov_*`, `v_*` or old `src_*` tables), the script stops and tells you. On a development database with no real data, remove them and apply the new schema in one step with:
+If the database still has tables from an earlier version of the schema (`mdm_*`, `gov_*`, `v_*` or old `src_*` tables such as `src_product_*` and `src_customer_*`), the script stops and tells you. On a development database with no real data, remove them and apply the new schema in one step with:
 
 ```bash
 python scripts/apply_schema.py --reset
@@ -71,6 +71,21 @@ python scripts/apply_schema.py --reset
 `--reset` deletes those tables **with their data** and asks you to type `reset` first.
 
 Everyone else can skip this section. Change the structure by editing `db/schema.sql` in a pull request.
+
+## Loading the synthetic data (UC1)
+
+`db/seed_sources.sql` fills the three source systems with synthetic data (577 rows). It contains:
+
+- **Scenario customers** (hand written): 13 real people spread over 26 source records, each reproducing a UC1 problem (the same person under several IDs, duplicates inside one system, an old email at the salon, pets spelt differently, a pet with no owner record, and two different people both called James Lee who must NOT be merged). The table at the top of the file lists them.
+- **Background customers** (generated, fixed values): 52 single-source customers with unique emails and phones, for realistic report volume.
+
+After `apply_schema.py`, run (one person, on the shared database):
+
+```bash
+python scripts/load_seed.py
+```
+
+It empties every `src_` table and reloads it in one transaction, so it is safe to re-run.
 
 ## Manual steps team members should know
 

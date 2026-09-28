@@ -13,7 +13,7 @@ from src.db import get_client  # noqa: E402
 
 
 def main() -> None:
-    table = sys.argv[1] if len(sys.argv) > 1 else "src_product_items"
+    table = sys.argv[1] if len(sys.argv) > 1 else "src_grooming_services"
     client = get_client()
     try:
         res = client.table(table).select("*").limit(3).execute()
