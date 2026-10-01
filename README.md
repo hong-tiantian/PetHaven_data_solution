@@ -1,113 +1,188 @@
 # PetHaven Data Solution
 
-## Required setup
+Assignment 2 prototype (32113 Advanced Database). PetHaven's website accepts Click & Collect orders that the store cannot fulfil, because the website works from a stock balance copied each morning and does not see the day's till sales.
 
-Use the following steps on a new machine before working on the project.
+The prototype combines the three source databases (store sales, online orders, central stock) into a dimensional warehouse. It then:
 
-### 1) Clone the repo
+- calculates availability for each product at each location;
+- compares the result with what the website believed;
+- identifies orders at risk;
+- demonstrates a simulated stock check.
+
+- Business rules: [00_req_feedback/Assignment2_Spec.md](00_req_feedback/Assignment2_Spec.md)
+- Design: [docs/Architecture_and_Data_Model.md](docs/Architecture_and_Data_Model.md)
+- Verification results and what is not implemented: [docs/implementation_notes.md](docs/implementation_notes.md)
+- Rule → SQL → test mapping: [docs/traceability.md](docs/traceability.md)
+- Demonstration script: [docs/demo_runbook.md](docs/demo_runbook.md)
+
+## Runs in the provided Lab Environment
+
+`docker-compose.yml`, `python/Dockerfile` and `python/requirements.txt` are the course lab files, unchanged. They provide:
+
+- PostgreSQL 15 (`postgres:5432`, user `student`, password `student`);
+- a Python 3.11 container;
+- CloudBeaver at <http://localhost:8978>.
+
+The lab's Neo4j and ClickHouse containers also start, but the prototype does not use them. All project code is in `workspace/`, which the compose file mounts as `/workspace`.
+
+## How to run the project
+
+You need **Docker Desktop** and **Git**. Nothing else needs installing: Python, PostgreSQL and all libraries run inside the lab containers.
+
+Run every command from the **repository root** (the folder that contains `docker-compose.yml`). On Windows, use **PowerShell** or **Command Prompt**. In Git Bash, see [Troubleshooting](#troubleshooting).
+
+### Step 1: Get the code (once)
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/hong-tiantian/PetHaven_data_solution.git
+```
+
+```bash
 cd PetHaven_data_solution
 ```
 
-### 2) Create and activate a virtual environment
+### Step 2: Start Docker Desktop
+
+Open Docker Desktop and wait until it says the engine is running. Every `docker` command below fails while Docker Desktop is closed.
+
+If you have another copy of the course lab (for example from the workshops), stop it first. Run this in **that lab's folder**, without `-v`:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+docker compose down
 ```
 
-### 3) Upgrade pip
+Both copies use the same container names (`student-postgres`, ...), so only one can run at a time. The other lab's data stays in its own `data/` folder; `docker compose up -d` in that folder brings it back later.
+
+### Step 3: Start the Lab Environment
 
 ```bash
-python -m pip install --upgrade pip
+docker compose up -d
 ```
 
-### 4) Install project dependencies
+- **First time:** this downloads the database images and builds the Python container. It needs internet access and can take several minutes.
+- **After that:** it starts in seconds.
+
+Check that all five containers are `Up`:
 
 ```bash
-pip install -r requirements.txt
+docker compose ps
 ```
 
-## Required environment variables
+The first time PostgreSQL starts, it needs about 20–30 seconds to initialise. Wait that long before Step 4, or you may see `Connection refused`.
 
-Create a local `.env` file in the repository root. Do not commit it.
+### Step 4: Build the databases and run every check (one command)
 
 ```bash
-cp .env.example .env
+docker compose exec python python /workspace/scripts/run_acceptance.py
 ```
 
-Then fill in the values from the team’s Supabase project:
+It usually takes one to two minutes. For each of the nine scenarios it:
 
-- `SUPABASE_URL`
-- `SUPABASE_SECRET_KEY`
-- `DATABASE_URL` (only for the person who creates the tables, see below)
+1. Recreates an isolated empty database, `pethaven_test_<scenario>`.
+2. Creates all schemas, tables and routines.
+3. Loads the synthetic data and simulates the business days, including the existing hourly, 1 am and 5 am jobs.
+4. Runs the ETL at every checkpoint and saves the reports.
+5. Compares the saved results with fixed expected values written from the Spec, printing expected value, actual value and PASS/FAIL/SKIP for each check.
 
-If the project does not yet have a `.env.example`, ask the project owner for the correct values and add them locally only.
+**It worked if the last lines say:**
 
-## Creating the database tables (one person, once)
+```text
+TOTAL: 272 checks - PASS 272, FAIL 0, SKIP 0
+Results written to /workspace/tests/results/acceptance_results.csv and acceptance_summary.md
+```
 
-The table structure lives in `db/schema.sql`. Only ONE person needs to apply it to the shared Supabase project.
+Any FAIL or SKIP is listed in `workspace/tests/results/acceptance_summary.md`, and the command exits with code 1.
 
-1. In Supabase click **Connect** -> **Session pooler**, copy the URI, and replace `[YOUR-PASSWORD]` with the database password.
-2. Put it in your local `.env` as `DATABASE_URL=...` (URL-encode special characters in the password).
-3. Run:
+The lab's own `lab` database and any shared database (for example Supabase) are never reset. Only `pethaven_test_*` databases are recreated, so it is safe to run this command again at any time.
+
+### Step 5: Look at the data
+
+The repository contains **no data files**. The synthetic data is written as SQL in `workspace/db/seed/`. Step 4 creates the data in your local lab database, and it stays there after the run (stored in `data/`, not in Git).
+
+To browse it, open CloudBeaver at <http://localhost:8978>. The first time, create an administrator login when CloudBeaver asks, then add a **PostgreSQL** connection:
+
+| Field | Value |
+| --- | --- |
+| Host | `postgres` |
+| Port | `5432` |
+| Database | `pethaven_test_case_1_baseline` (or any other `pethaven_test_<scenario>`) |
+| User / password | `student` / `student` |
+
+Tick "Show all databases" to see all nine scenario databases. Good starting points are the report views:
+
+- `rpt.v_availability_comparison`
+- `rpt.v_order_risk_and_cancellation`
+- `rpt.v_data_update_delay`
+- `rpt.v_website_stock_age`
+
+Ready-made queries are in [docs/demo_runbook.md](docs/demo_runbook.md).
+
+To get the reports as CSV files instead, run `export_reports.py` (see below). The files go to `workspace/reports/<scenario>/`.
+
+### Step 6: Stop the lab when you are done
 
 ```bash
-python scripts/apply_schema.py
+docker compose stop
 ```
 
-The script shows which database it will write to and asks for confirmation. It is safe to re-run, and if anything fails nothing is created. Then check the connection with `python scripts/test_connection.py`.
+Your data is kept. Next time, start Docker Desktop and run `docker compose start` (or `docker compose up -d`).
 
-The schema currently covers only the three UC1 (Customer & Pet Profile) source systems (`src_pos_*`, `src_digital_*`, `src_grooming_*`), enough to load the initial synthetic data. Staging, MDM and the dimensional data warehouse (Silver and Gold layers) are added in later pull requests.
+### Other commands
 
-If the database still has tables from an earlier version of the schema (`mdm_*`, `gov_*`, `v_*` or old `src_*` tables such as `src_product_*` and `src_customer_*`), the script stops and tells you. On a development database with no real data, remove them and apply the new schema in one step with:
+| Task | Command (run from the repository root) |
+| --- | --- |
+| Step through one scenario with pauses (live demo) | `docker compose exec python python /workspace/scripts/run_scenario.py case_1_baseline --pause` |
+| Run the acceptance checks for one scenario | `docker compose exec python python /workspace/scripts/run_acceptance.py --scenario case_2` |
+| Export the reports to CSV (`workspace/reports/`) | `docker compose exec python python /workspace/scripts/export_reports.py` |
+| Stop the lab (data kept) | `docker compose stop` |
+| Remove the lab containers (data kept in `data/`) | `docker compose down` |
 
-```bash
-python scripts/apply_schema.py --reset
+Scenarios: `case_1_baseline`, `case_1_improved`, `case_2`, `movement_checks`, `unknown_identifier`, `conflicting_duplicate`, `failed_publication`, `source_completeness`, `pre_cutoff_late_record`.
+
+Avoid `docker compose down -v`, and do not delete `data/`. Both remove the local databases. If that happens, rerun Step 4 to rebuild them.
+
+### Troubleshooting
+
+| Message | Cause and fix |
+| --- | --- |
+| `failed to connect to the docker API` or `Cannot connect to the Docker daemon` | Docker Desktop is not running. Start it, wait until the engine is running, and retry. |
+| `Conflict. The container name "/student-postgres" is already in use` | Another copy of the course lab exists. In that lab's folder run `docker compose down`, without `-v`, then repeat Step 3. |
+| `Connection refused` from `run_acceptance.py` | PostgreSQL is still starting. Wait 20–30 seconds and run the command again. |
+| `can't open file '/workspace/C:/Program Files/Git/...'` | Git Bash rewrote the `/workspace` path. Use PowerShell, or put `MSYS_NO_PATHCONV=1` in front of the command, for example `MSYS_NO_PATHCONV=1 docker compose exec python python /workspace/scripts/run_acceptance.py`. |
+| `the input device is not a TTY` | Add `-T` after `exec` (`docker compose exec -T python python ...`). The `--pause` demo mode needs an interactive terminal, so run it without `-T` in a normal terminal window. |
+| `port is already allocated` (5432, 8978, ...) | Another program uses that port, often a locally installed PostgreSQL. Stop that program, then repeat Step 3. |
+
+## Repository layout
+
+```text
+docker-compose.yml, python/      Lab Environment (unchanged course files)
+workspace/
+  db/01_schemas.sql ... 08_reporting_objects.sql   schemas, tables, calculations, report views
+  db/source_actions/   business actions of the three sources (till sale, order, receipt, ...)
+  db/source_jobs/      existing schedules: hourly processing, 1 am import, midnight snapshot, 5 am refresh
+  db/etl/              extract -> validate -> stage -> publish -> save report observations
+  db/seed/             reference mappings, base master data and the nine scenario scripts
+  scripts/             Python runners (orchestration only; the logic is in SQL)
+  tests/expected/      fixed expected values per scenario (written from the Spec)
+  tests/sql/           read-only queries that fetch the actual values
+  tests/results/       latest acceptance results
+docs/                  design, implementation notes, traceability, demo runbook
+00_req_feedback/       assignment brief, Spec, tutor feedback, subject notes
+data/                  lab database files created by Docker (not in Git)
 ```
 
-`--reset` deletes those tables **with their data** and asks you to type `reset` first.
+## Database schemas
 
-Everyone else can skip this section. Change the structure by editing `db/schema.sql` in a pull request.
+| Schema | Role |
+| --- | --- |
+| `src_store_sales`, `src_online`, `src_stock` | The three business sources |
+| `raw` | Immutable extracts, one copy per load run |
+| `ref` | Approved product and location code mappings |
+| `stg` | Validation, code matching and one identity per physical event |
+| `dw` | Dimensional warehouse (product, location, date; five fact tables) |
+| `rpt` | Shared stock calculation, saved observations, simulated check, three report views |
+| `audit` | Load runs, extraction manifests, lineage, data-quality issues |
 
-## Loading the synthetic data (UC1)
+## Supabase (optional backup only)
 
-`db/seed_sources.sql` fills the three source systems with synthetic data (577 rows). It contains:
-
-- **Scenario customers** (hand written): 13 real people spread over 26 source records, each reproducing a UC1 problem (the same person under several IDs, duplicates inside one system, an old email at the salon, pets spelt differently, a pet with no owner record, and two different people both called James Lee who must NOT be merged). The table at the top of the file lists them.
-- **Background customers** (generated, fixed values): 52 single-source customers with unique emails and phones, for realistic report volume.
-
-After `apply_schema.py`, run (one person, on the shared database):
-
-```bash
-python scripts/load_seed.py
-```
-
-It empties every `src_` table and reloads it in one transaction, so it is safe to re-run.
-
-## Manual steps team members should know
-
-1. Ask to be added to the correct Supabase project / organization.
-2. Accept the invitation and verify access in the Supabase dashboard.
-3. Open the project and go to Settings -> API Keys.
-4. Copy the connection values into your local `.env` file.
-5. Keep `.env` local only and never commit it to Git.
-6. If you are working with database scripts, make sure your local environment is active before running commands.
-
-## Local workflow
-
-```bash
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-```
-
-Use the active virtual environment for all local scripts and database commands.
-
-## Important notes
-
-- `.env` is secret and should never be shared in chat, GitHub issues, or PRs.
-- `SUPABASE_SECRET_KEY` should only be used in local or server-side scripts, not in frontend code.
-- If a key is exposed, rotate it immediately in Supabase.
-- Keep project configuration and schema changes documented and reviewed in pull requests.
+The team's Supabase project is not part of the tested workflow. See [docs/supabase_backup.md](docs/supabase_backup.md). Never commit a `.env` file or connection strings.
