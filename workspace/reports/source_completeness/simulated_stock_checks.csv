@@ -1,0 +1,2 @@
+check_code,observed_at,location_code,canonical_location_code,load_run_code,load_status,overall_result,sku,requested_quantity,available_quantity,line_result,line_quality_status
+chk_par_rc_1000,2026-09-16 10:00:00+10:00,store-parramatta,STR-PAR,s_d1_1000,rejected,unknown,PH-10231,1,,unknown,load_not_published

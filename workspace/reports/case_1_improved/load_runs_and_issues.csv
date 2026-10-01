@@ -1,0 +1,6 @@
+run_code,source_as_of_at,status,summary_error,rule_code,severity,source_reference,message
+cp_d1_0100,2026-09-16 01:00:00+10:00,succeeded,,,,,
+cp_d1_0500,2026-09-16 05:00:00+10:00,succeeded,,,,,
+cp_d1_0930,2026-09-16 09:30:00+10:00,succeeded,,,,,
+cp_d1_1400,2026-09-16 14:00:00+10:00,succeeded,,,,,
+cp_d1_1500,2026-09-16 15:00:00+10:00,succeeded,,,,,

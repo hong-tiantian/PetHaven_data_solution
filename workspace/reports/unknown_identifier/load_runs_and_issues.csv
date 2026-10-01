@@ -1,0 +1,4 @@
+run_code,source_as_of_at,status,summary_error,rule_code,severity,source_reference,message
+u_d1_1100,2026-09-16 11:00:00+10:00,rejected,"2 validation error(s): unmatched_location, unmatched_product",unmatched_product,error,store_sales:barcode:9300000999995,"No approved product mapping for store_sales barcode 9300000999995 (1 record(s)); flagged for correction, not assigned to a default product"
+u_d1_1100,2026-09-16 11:00:00+10:00,rejected,"2 validation error(s): unmatched_location, unmatched_product",unmatched_location,error,store_sales:location:0199,"No approved location mapping for store_sales location 0199 (1 record(s)); flagged for correction, not assigned to a default store"
+u_d1_1200,2026-09-16 12:00:00+10:00,succeeded,,,,,

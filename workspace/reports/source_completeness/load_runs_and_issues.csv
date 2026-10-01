@@ -1,0 +1,4 @@
+run_code,source_as_of_at,status,summary_error,rule_code,severity,source_reference,message
+s_d1_1000,2026-09-16 10:00:00+10:00,rejected,"2 validation error(s): incomplete_extract, order_without_lines",incomplete_extract,error,online.web_order_line,Required source table was not extracted in this run
+s_d1_1000,2026-09-16 10:00:00+10:00,rejected,"2 validation error(s): incomplete_extract, order_without_lines",order_without_lines,error,online:order:W-1001,Accepted order has no lines in this extract
+s_d1_1100,2026-09-16 11:00:00+10:00,succeeded,,,,,

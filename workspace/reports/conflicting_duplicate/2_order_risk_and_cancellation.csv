@@ -1,0 +1,1 @@
+checkpoint_code,observed_at,order_id,line_id,placed_at,sku,pickup_location_code,effective_status,requested_quantity,allocated_quantity,line_shortfall_quantity,is_at_risk,cancellation_reason,cancelled_at,is_stock_related_cancellation

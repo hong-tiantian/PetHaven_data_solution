@@ -1,0 +1,9 @@
+test_id,check_name,expected,spec_reference,description
+T21,f_d1_1100/load_status,failed,Arch 12.2,Injected failure during publication
+T21,f_d1_1100/facts_first_loaded_by_run,0,Arch 12.2,Publication writes are rolled back
+T21,f_d1_1100/published_at_is_null,true,Arch 12.2,
+T21,f_d1_1100/raw_sale_lines_extracted,1,Arch 12.2,Raw evidence is retained
+T21,f_d1_1100/ready_report_runs,0,Arch 13.2,No ready report for a failed load
+T21,chk_par_rc_1100/overall_result,unknown,Arch 13.1,
+T21,f_d1_1200/load_status,succeeded,Arch 12.2,Next load succeeds
+T21,f_d1_1200/PH-10231@STR-PAR/on_hand,4,Arch 12.2,

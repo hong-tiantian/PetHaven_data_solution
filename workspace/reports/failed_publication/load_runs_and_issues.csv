@@ -1,0 +1,4 @@
+run_code,source_as_of_at,status,summary_error,rule_code,severity,source_reference,message
+f_d1_1100,2026-09-16 11:00:00+10:00,failed,"publication failed: Injected publication failure for load run 1 (test T21)
+CONTEXT:  PL/pgSQL function dw.load_warehouse(bigint,text) line 189 at RAISE",,,,
+f_d1_1200,2026-09-16 12:00:00+10:00,succeeded,,,,,

@@ -1,0 +1,3 @@
+run_code,source_as_of_at,status,summary_error,rule_code,severity,source_reference,message
+c_d1_1100,2026-09-16 11:00:00+10:00,succeeded,,,,,
+c_d2_0200,2026-09-17 02:00:00+10:00,rejected,1 validation error(s): conflicting_duplicate,conflicting_duplicate,error,store_sales:sale:S-0123-0001:1,"Representations disagree: raw.stock_stock_movement#1 (sku PH-10231, location STR-PAR, type store_sale, quantity -2, occurred 2026-09-16 10:15:00+10); raw.store_sales_sale_line#2 (sku PH-10231, location STR-PAR, type store_sale, quantity -1, occurred 2026-09-16 10:15:00+10)"

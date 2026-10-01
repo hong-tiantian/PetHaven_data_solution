@@ -1,0 +1,11 @@
+run_code,source_as_of_at,status,summary_error,rule_code,severity,source_reference,message
+cp_d1_0100,2026-09-16 01:00:00+10:00,succeeded,,,,,
+cp_d1_0500,2026-09-16 05:00:00+10:00,succeeded,,,,,
+cp_d1_0930,2026-09-16 09:30:00+10:00,succeeded,,,,,
+cp_d1_1400,2026-09-16 14:00:00+10:00,succeeded,,,,,
+cp_d1_1500,2026-09-16 15:00:00+10:00,succeeded,,,,,
+cp_d1_1530,2026-09-16 15:30:00+10:00,succeeded,,,,,
+cp_d1_1545,2026-09-16 15:45:00+10:00,succeeded,,,,,
+cp_d2_0100,2026-09-17 01:00:00+10:00,succeeded,,,,,
+cp_d2_0500,2026-09-17 05:00:00+10:00,succeeded,,,,,
+cp_d2_0500_repeat,2026-09-17 05:00:00+10:00,succeeded,,,,,

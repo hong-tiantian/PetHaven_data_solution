@@ -1,0 +1,4 @@
+check_code,observed_at,location_code,canonical_location_code,load_run_code,load_status,overall_result,sku,requested_quantity,available_quantity,line_result,line_quality_status
+chk_new_greenies_1400,2026-09-16 14:00:00+10:00,store-newtown,STR-NEW,m_d1_1400,succeeded,unknown,PH-30710,1,,unknown,missing_opening
+chk_cha_multi_1600,2026-09-16 16:00:00+10:00,store-chatswood,STR-CHA,m_d1_1600,succeeded,insufficient,PH-10231,1,6,sufficient,valid
+chk_cha_multi_1600,2026-09-16 16:00:00+10:00,store-chatswood,STR-CHA,m_d1_1600,succeeded,insufficient,PH-20455,1,0,insufficient,valid

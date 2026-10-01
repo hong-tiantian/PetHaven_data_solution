@@ -1,0 +1,7 @@
+test_id,check_name,expected,spec_reference,description
+T15,c_d1_1100/load_status,succeeded,Arch 12.2,Direct sale loads normally
+T15,c_d2_0200/load_status,rejected,Arch 8.2,Central copy disagrees with the original sale
+T15,c_d2_0200/issue_count/conflicting_duplicate,1,Arch 8.2,
+T15,c_d2_0200/conflict_raw_tables,raw.stock_stock_movement;raw.store_sales_sale_line,Arch 8.2,Both raw references are recorded
+T15,c_d2_0200/facts_first_loaded_by_run,0,Arch 8.2,
+T15,final/fact_quantity_store_sales:sale:S-0123-0001:1,-1,Arch 7.2,Published fact is not overwritten

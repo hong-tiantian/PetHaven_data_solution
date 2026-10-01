@@ -1,0 +1,73 @@
+test_id,check_name,expected,spec_reference,description
+T04,m_d1_1600/PH-10231@STR-CHA/on_hand,8,Spec 4.2 activity B,Ready order is still on hand before collection
+T04,m_d1_1600/PH-10231@STR-CHA/reserved,2,Spec 4.2 activity B,Ready order is still reserved
+T04,m_d1_1600/PH-10231@STR-CHA/available,6,Spec 5.1,
+T04,m_d2_0100/PH-10231@STR-CHA/on_hand,6,Spec 5.2,Collection reduces on hand by two
+T04,m_d2_0100/PH-10231@STR-CHA/reserved,0,Spec 5.2,Collection ends the reservation
+T04,m_d2_0100/PH-10231@STR-CHA/available,6,Spec 5.3,Collected units do not become available again
+T04,m_d2_0100/W-3201-1/effective_status,collected,Spec 4.2 activity B,
+T05,m_d1_1000/PH-20455@STR-PAR/on_hand,10,Spec 4.2 activity A,Order placement creates no physical movement
+T05,m_d1_1000/PH-20455@STR-PAR/reserved,3,Spec 4.2 activity A,
+T05,m_d1_1000/PH-20455@STR-PAR/available,7,Spec 5.1,
+T05,m_d1_1000/PH-20455@STR-PAR/website_available,7,Spec 5.3,Website subtracts its own reservation
+T05,m_d1_1100/PH-20455@STR-PAR/on_hand,10,Spec 4.2 activity C,Cancellation leaves on hand unchanged
+T05,m_d1_1100/PH-20455@STR-PAR/reserved,0,Spec 4.2 activity C,Cancellation releases the reservation
+T05,m_d1_1100/PH-20455@STR-PAR/available,10,Spec 5.1,
+T05,m_d1_1100/PH-20455@STR-PAR/website_available,10,Spec 5.3,Website availability increases after cancellation
+T05,m_d1_1100/W-3001-1/effective_status,cancelled,Spec 5.5,
+T05,m_d1_1100/W-3001-1/cancellation_reason,customer_request,Spec 4.2 activity C,Change of mind is distinguishable from stock cancellation
+T05,final/W-3001_status_events,2,Spec 5.5,Placement and cancellation are both retained
+T06,m_d1_1000/PH-10231@DC-MOO/on_hand,60,Spec 4.3 activity A,Supplier receipt of 20 at the DC
+T06,m_d1_1000/PH-10231@DC-MOO/central_recorded_on_hand,40,Spec 4.3 activity A,Central current quantity waits for the hourly run
+T06,m_d1_1000/PH-10231@STR-PAR/on_hand,5,Spec 4.3 activity A,Store stock unchanged by a DC receipt
+T06,m_d1_1000/PH-10231@STR-CHA/on_hand,8,Spec 4.3 activity A,
+T06,m_d1_1100/PH-10231@DC-MOO/central_recorded_on_hand,60,Spec 3.2,Hourly processing applies the receipt
+T07,m_d1_1200/PH-10231@DC-MOO/on_hand,60,Spec 4.3 activity B,Creating a transfer moves no stock
+T07,m_d1_1200/PH-10231@STR-PAR/on_hand,5,Spec 4.3 activity B,
+T07,m_d1_1300/PH-10231@DC-MOO/on_hand,50,Spec 4.3 activity B,Dispatch reduces the DC
+T07,m_d1_1300/PH-10231@STR-PAR/on_hand,5,Spec 4.3 activity B,In-transit goods are not store stock
+T07,m_d1_1300/PH-10231@DC-MOO/website_available,40,Spec 5.3,Website misses DC receipts and dispatches
+T07,m_d1_1300/PH-10231@DC-MOO/difference,-10,Arch 10.2,Negative difference means the website understates availability
+T07,m_d1_1600/PH-10231@DC-MOO/on_hand,50,Spec 4.3 activity B,
+T07,m_d1_1600/PH-10231@STR-PAR/on_hand,15,Spec 4.3 activity B,Receipt increases Parramatta
+T07,m_d1_1600/PH-10231@STR-PAR/website_available,5,Spec 4.3 activity B,Website copy does not increase until the next refresh
+T07,final/transfer_movement_facts_TR-7001,2,Arch 4.3,One dispatch and one receipt; the transfer line adds no movement
+T11,m_d2_0100/PH-20455@STR-PAR/opening_quantity,10,Arch 9.3,Midnight adjustment is excluded from the snapshot
+T11,m_d2_0100/PH-20455@STR-PAR/movement_quantity,-1,Arch 9.3,Midnight adjustment is included after the cutoff
+T11,m_d2_0100/PH-20455@STR-PAR/on_hand,9,Arch 9.3,Counted once
+T11,m_d2_0100/PH-20455@STR-PAR/central_recorded_on_hand,9,Spec 3.2,Central current balance already includes it
+T13,m_d2_0500/PH-10231@STR-CHA/opening_quantity,8,Spec 5.3,Collection after midnight is not in the Day 2 snapshot
+T13,m_d2_0500/PH-10231@STR-CHA/movement_quantity,-2,Spec 5.3,
+T13,m_d2_0500/PH-10231@STR-CHA/website_available,6,Spec 5.3,Website deducts the 00:30 collection after copying the midnight snapshot
+T13,m_d2_0500/PH-10231@STR-CHA/on_hand,6,Spec 5.3,
+T13,m_d2_0500/PH-10231@STR-CHA/reserved,0,Spec 5.3,No reservation remains after collection
+T16,m_d1_1400/PH-30710@STR-NEW/quality_status,missing_opening,Arch 9.3,No opening snapshot exists for this pair
+T16,m_d1_1400/PH-30710@STR-NEW/on_hand,NULL,Arch 9.3,Unknown is not zero
+T16,m_d1_1400/PH-30710@STR-NEW/available,NULL,Arch 13.3,
+T16,m_d1_1400/PH-30710@STR-NEW/reserved,0,Arch 13.3,Known diagnostics are preserved
+T16,chk_new_greenies_1400/overall_result,unknown,Arch 13.1,Missing opening is neither sufficient nor insufficient
+T16,m_d2_0100/PH-30710@STR-NEW/quality_status,valid,Arch 11.2,The next snapshot establishes the balance
+T16,m_d2_0100/PH-30710@STR-NEW/on_hand,6,Arch 11.2,
+T18,m_d1_1200/PH-30710@DC-MOO/on_hand,50,Arch 9.2,Saved observation from the 12:00 load
+T18,m_recon_d1_1200/PH-30710@DC-MOO/on_hand,45,Arch 9.2,Later load reconstructs 12:00 with the late adjustment
+T18,m_d1_1400/PH-30710@DC-MOO/on_hand,39,Arch 9.2,Late adjustment and transfer dispatch
+T19,m_d1_1100/PH-10231@STR-NEW/on_hand,1,Arch 10.4,
+T19,m_d1_1100/PH-10231@STR-NEW/reserved,2,Arch 10.4,Two orders accepted at the same time
+T19,m_d1_1100/PH-10231@STR-NEW/shortfall,1,Arch 10.4,
+T19,m_d1_1100/PH-10231@STR-NEW/website_available,0,Spec 5.3,
+T19,m_d1_1100/W-3099-1/allocated,1,Arch 10.4,Lower order ID wins the tie although it was inserted second
+T19,m_d1_1100/W-3099-1/line_shortfall,0,Arch 10.4,
+T19,m_d1_1100/W-3105-1/allocated,0,Arch 10.4,
+T19,m_d1_1100/W-3105-1/line_shortfall,1,Arch 10.4,
+T20,chk_cha_multi_1600/overall_result,insufficient,Arch 10.4,One unavailable line makes the whole request insufficient
+T20,chk_cha_multi_1600/PH-10231/line_result,sufficient,Arch 10.4,
+T20,chk_cha_multi_1600/PH-10231/available_quantity,6,Arch 10.4,
+T20,chk_cha_multi_1600/PH-20455/line_result,insufficient,Arch 10.4,
+T20,chk_cha_multi_1600/PH-20455/available_quantity,0,Arch 9.3,Known zero opening balance
+T20,final/web_order_count,4,Arch 10.4,No partial order is created
+T26,m_d1_1400/PH-20455@DC-MOO/on_hand,28,Arch 10.5,Damage adjustment of minus two
+T26,m_d1_1600/PH-20455@DC-MOO/on_hand,30,Arch 10.5,Reversal restores the units after its own time
+T26,final/adjustment_facts_PH-20455@DC-MOO,1,Arch 10.5,Original adjustment is retained
+T26,final/reversal_references_adjustment,true,Arch 10.5,Reversal is explicitly linked to the original
+T26,step/reopen_cancelled_order/status,expected_error,Arch 10.5,Unsupported order-status correction is rejected visibly
+T26,final/W-3001_status_events_after_rejected_correction,2,Arch 10.5,Rejected correction adds no history

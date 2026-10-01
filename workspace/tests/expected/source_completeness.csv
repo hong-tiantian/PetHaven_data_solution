@@ -1,0 +1,9 @@
+test_id,check_name,expected,spec_reference,description
+T24,s_d1_1000/load_status,rejected,Arch 12.1,A required table was not extracted
+T24,s_d1_1000/issue_count/incomplete_extract,1,Arch 12.1,
+T24,s_d1_1000/missing_extract_table,online.web_order_line,Arch 12.1,
+T24,s_d1_1000/facts_first_loaded_by_run,0,Arch 12.1,
+T24,chk_par_rc_1000/overall_result,unknown,Arch 13.1,
+T24,s_d1_1100/load_status,succeeded,Arch 12.1,Complete extraction succeeds
+T24,s_d1_1100/extract_manifest_rows,19,Arch 12.1,Every source table has a manifest
+T24,s_d1_1100/PH-10231@STR-PAR/reserved,1,Arch 12.1,
