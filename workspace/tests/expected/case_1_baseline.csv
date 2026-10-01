@@ -1,0 +1,105 @@
+test_id,check_name,expected,spec_reference,description
+T01,cp_d1_0100/PH-10231@STR-PAR/central_recorded_on_hand,5,Spec 6 Case 1 row 1,Central recorded on hand after the bootstrap midnight snapshot
+T01,cp_d1_0100/PH-10231@STR-PAR/website_available,NULL,Spec 6 Case 1 row 1,No website copy exists before the first 5 am refresh
+T01,cp_d1_0100/PH-10231@STR-PAR/website_quality_status,missing_copy,Arch 10.2,Missing website copy is unknown and not zero
+T01,cp_d1_0100/PH-10231@STR-PAR/on_hand,5,Spec 6 Case 1 row 1,Actual on hand
+T01,cp_d1_0100/PH-10231@STR-PAR/reserved,0,Spec 6 Case 1 row 1,Active reserved
+T01,cp_d1_0100/PH-10231@STR-PAR/available,5,Spec 6 Case 1 row 1,Actual available
+T01,cp_d1_0100/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 1 row 1,Shortfall
+T01,cp_d1_0500/PH-10231@STR-PAR/central_recorded_on_hand,5,Spec 6 Case 1 row 2,
+T01,cp_d1_0500/PH-10231@STR-PAR/website_available,5,Spec 6 Case 1 row 2,Website copies the midnight snapshot
+T01,cp_d1_0500/PH-10231@STR-PAR/on_hand,5,Spec 6 Case 1 row 2,
+T01,cp_d1_0500/PH-10231@STR-PAR/reserved,0,Spec 6 Case 1 row 2,
+T01,cp_d1_0500/PH-10231@STR-PAR/available,5,Spec 6 Case 1 row 2,
+T01,cp_d1_0500/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 1 row 2,
+T01,cp_d1_0500/PH-10231@STR-PAR/difference,0,Spec 7.4 output 1,Website minus integrated available
+T01,cp_d1_0930/PH-10231@STR-PAR/central_recorded_on_hand,5,Spec 6 Case 1 row 3,
+T01,cp_d1_0930/PH-10231@STR-PAR/website_available,4,Spec 6 Case 1 row 3,Customer A reserves one bag
+T01,cp_d1_0930/PH-10231@STR-PAR/on_hand,5,Spec 6 Case 1 row 3,
+T01,cp_d1_0930/PH-10231@STR-PAR/reserved,1,Spec 6 Case 1 row 3,
+T01,cp_d1_0930/PH-10231@STR-PAR/available,4,Spec 6 Case 1 row 3,
+T01,cp_d1_0930/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 1 row 3,
+T01,cp_d1_1400/PH-10231@STR-PAR/central_recorded_on_hand,5,Spec 6 Case 1 row 4,Central has not imported the till sales
+T01,cp_d1_1400/PH-10231@STR-PAR/website_available,4,Spec 6 Case 1 row 4,Website misses the four till sales
+T01,cp_d1_1400/PH-10231@STR-PAR/on_hand,1,Spec 6 Case 1 row 4,
+T01,cp_d1_1400/PH-10231@STR-PAR/reserved,1,Spec 6 Case 1 row 4,
+T01,cp_d1_1400/PH-10231@STR-PAR/available,0,Spec 6 Case 1 row 4,
+T01,cp_d1_1400/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 1 row 4,
+T01,cp_d1_1400/PH-10231@STR-PAR/difference,4,Spec 7.4 output 1,Website overstates availability by four
+T01,cp_d1_1400/PH-20455@STR-CHA/on_hand,3,Background fixture,Background Chatswood till sale reduces four to three
+T01,cp_d1_1400/PH-20455@STR-CHA/website_available,4,Background fixture,Website misses the background till sale
+T01,cp_d1_1500/PH-10231@STR-PAR/central_recorded_on_hand,5,Spec 6 Case 1 row 5,
+T01,cp_d1_1500/PH-10231@STR-PAR/website_available,3,Spec 6 Case 1 row 5,Sarah's order accepted by the website
+T01,cp_d1_1500/PH-10231@STR-PAR/on_hand,1,Spec 6 Case 1 row 5,
+T01,cp_d1_1500/PH-10231@STR-PAR/reserved,2,Spec 6 Case 1 row 5,
+T01,cp_d1_1500/PH-10231@STR-PAR/available,0,Spec 6 Case 1 row 5,
+T01,cp_d1_1500/PH-10231@STR-PAR/shortfall,1,Spec 6 Case 1 row 5,Two commitments compete for one bag
+T01,cp_d1_1500/PH-10231@STR-PAR/difference,3,Spec 7.4 output 1,
+T01,cp_d1_1530/PH-10231@STR-PAR/central_recorded_on_hand,5,Spec 6 Case 1 row 6,
+T01,cp_d1_1530/PH-10231@STR-PAR/website_available,3,Spec 6 Case 1 row 6,
+T01,cp_d1_1530/PH-10231@STR-PAR/on_hand,1,Spec 6 Case 1 row 6,
+T01,cp_d1_1530/PH-10231@STR-PAR/reserved,2,Spec 6 Case 1 row 6,
+T01,cp_d1_1530/PH-10231@STR-PAR/available,0,Spec 6 Case 1 row 6,
+T01,cp_d1_1530/PH-10231@STR-PAR/shortfall,1,Spec 6 Case 1 row 6,
+T01,cp_d1_1545/PH-10231@STR-PAR/central_recorded_on_hand,5,Spec 6 Case 1 row 7,
+T01,cp_d1_1545/PH-10231@STR-PAR/website_available,4,Spec 6 Case 1 row 7,Cancellation releases Sarah's reservation
+T01,cp_d1_1545/PH-10231@STR-PAR/on_hand,1,Spec 6 Case 1 row 7,
+T01,cp_d1_1545/PH-10231@STR-PAR/reserved,1,Spec 6 Case 1 row 7,
+T01,cp_d1_1545/PH-10231@STR-PAR/available,0,Spec 6 Case 1 row 7,
+T01,cp_d1_1545/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 1 row 7,
+T01,cp_d2_0100/PH-10231@STR-PAR/central_recorded_on_hand,1,Spec 6 Case 1 row 8,Only central has processed the store sales
+T01,cp_d2_0100/PH-10231@STR-PAR/website_available,4,Spec 6 Case 1 row 8,Website still uses the Day 1 copy
+T01,cp_d2_0100/PH-10231@STR-PAR/on_hand,1,Spec 6 Case 1 row 8,
+T01,cp_d2_0100/PH-10231@STR-PAR/reserved,1,Spec 6 Case 1 row 8,
+T01,cp_d2_0100/PH-10231@STR-PAR/available,0,Spec 6 Case 1 row 8,
+T01,cp_d2_0100/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 1 row 8,
+T01,cp_d2_0500/PH-10231@STR-PAR/central_recorded_on_hand,1,Spec 6 Case 1 row 9,
+T01,cp_d2_0500/PH-10231@STR-PAR/website_available,0,Spec 6 Case 1 row 9,Website copies one on hand and subtracts A's reservation
+T01,cp_d2_0500/PH-10231@STR-PAR/on_hand,1,Spec 6 Case 1 row 9,
+T01,cp_d2_0500/PH-10231@STR-PAR/reserved,1,Spec 6 Case 1 row 9,
+T01,cp_d2_0500/PH-10231@STR-PAR/available,0,Spec 6 Case 1 row 9,
+T01,cp_d2_0500/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 1 row 9,
+T01,cp_d2_0500/PH-10231@STR-PAR/difference,0,Spec 7.4 output 1,
+T08,cp_d2_0100/store_sale_facts_for_parramatta_sales,4,Spec 5.2; Arch 8.2,Each Parramatta till sale line is one warehouse movement after the overnight import
+T08,cp_d2_0100/central_import_rows_linked_as_duplicates,4,Arch 8.2,Central imported copies are attached as duplicate lineage instead of new facts
+T08,final/store_sale_facts_total,5,Spec 5.2,Four Parramatta sales plus one background Chatswood sale
+T09,cp_d2_0500_repeat/load_status,succeeded,Arch 12.2,Repeat load with no new business actions
+T09,cp_d2_0500_repeat/facts_first_loaded_by_run,0,Arch 12.2,A repeat load adds no business facts
+T09,cp_d2_0500_repeat/raw_sale_lines_extracted,5,Arch 5.1,Raw evidence grows on every full extraction
+T09,cp_d2_0500_repeat/PH-10231@STR-PAR/website_available,0,Spec 6 Case 1 row 9,Results unchanged after the repeat load
+T09,cp_d2_0500_repeat/PH-10231@STR-PAR/on_hand,1,Spec 6 Case 1 row 9,
+T09,cp_d2_0500_repeat/PH-10231@STR-PAR/reserved,1,Spec 6 Case 1 row 9,
+T09,cp_d2_0500_repeat/PH-10231@STR-PAR/available,0,Spec 6 Case 1 row 9,
+T09,cp_d2_0500_repeat/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 1 row 9,
+T10,cp_d2_0100/PH-10231@STR-PAR/opening_cutoff_at,2026-09-17 00:00,Spec 5.2; Arch 9.3,Opening advances to the Day 2 midnight snapshot
+T10,cp_d2_0100/PH-10231@STR-PAR/opening_quantity,1,Spec 5.2,The new snapshot already contains the four till sales
+T10,cp_d2_0100/PH-10231@STR-PAR/movement_quantity,0,Spec 5.2,Sales inside the snapshot are not subtracted again
+T12,cp_d2_0500/W-1001-1/effective_status,ready,Spec 5.3; Arch 11.3,Customer A's order is still active after the 5 am refresh
+T12,cp_d2_0500/W-1001-1/allocated,1,Spec 7.4,A keeps the remaining bag
+T17,cp_d1_1500/W-1001-1/effective_status,ready,Spec 6 Case 1,A's bag is set aside
+T17,cp_d1_1500/W-1001-1/allocated,1,Spec 7.3,A is earlier and receives the bag
+T17,cp_d1_1500/W-1001-1/line_shortfall,0,Spec 7.3,
+T17,cp_d1_1500/W-1002-1/effective_status,awaiting_pick,Spec 6 Case 1,Sarah's order is active at 3 pm
+T17,cp_d1_1500/W-1002-1/allocated,0,Spec 7.3,
+T17,cp_d1_1500/W-1002-1/line_shortfall,1,Spec 7.3,Sarah's order is at risk
+T17,cp_d1_1545/W-1002-1/effective_status,cancelled,Spec 5.5,Cancellation recorded at 3:45 pm
+T17,cp_d1_1545/W-1002-1/cancellation_reason,insufficient_stock,Spec 4.2 activity C,
+T17,cp_d1_1545/W-1002-1/cancelled_at,2026-09-16 15:45,Spec 5.5,
+T17,cp_d1_1545/W-1002-1/allocated,NULL,Arch 13.2,Inactive lines have no allocation
+T17,cp_hist_d1_1500/W-1002-1/effective_status,awaiting_pick,Spec 7.4,A later reconstruction of 3 pm uses history rather than the current cancelled status
+T17,cp_hist_d1_1500/W-1002-1/line_shortfall,1,Spec 7.4,
+T22,final/central_store_sale_movements,5,Spec 5.2,Re-running the 1 am import does not create a second central movement
+T22,final/central_movement_applications,5,Arch 11.1,Each central movement is applied to the current balance once
+T22,final/central_current_on_hand_PH-10231@STR-PAR,1,Arch 11.2,Current balance after the rerun
+T23,cp_d1_1500/website_snapshot_cutoff_at,2026-09-16 00:00,Spec 7.4 output 3,
+T23,cp_d1_1500/website_copied_at,2026-09-16 05:00,Spec 7.4 output 3,
+T23,cp_d1_1500/website_basis_age,15:00:00,Spec 7.4 output 3,Observation time minus snapshot cutoff
+T23,cp_d1_1500/website_copy_age,10:00:00,Arch 13.3,Observation time minus copy time
+T23,cp_d1_1500/website_copy_lag,05:00:00,Spec 7.4,A 5 am copy of a midnight snapshot is already five hours old
+T23,cp_d2_0500/website_basis_age,05:00:00,Spec 7.4 output 3,
+T23,cp_d2_0500/website_copy_age,00:00:00,Arch 13.3,
+T23,event/store_sales:sale:S-0123-0001:1/occurred_at,2026-09-16 10:15,Spec 7.4 output 3,Event time
+T23,event/store_sales:sale:S-0123-0001:1/source_recorded_at,2026-09-16 10:15,Spec 3.2,Till saves the sale immediately
+T23,event/store_sales:sale:S-0123-0001:1/scenario_published_at,2026-09-16 14:00,Arch 9.1,First simulated warehouse checkpoint that included the sale
+T23,event/store_sales:sale:S-0123-0001:1/simulated_delay,03:45:00,Arch 9.1,Labelled as simulated delay
+T23,event/store_sales:sale:S-0123-0001:1/warehouse_loaded_at_recorded,true,Arch 9.1,Actual insertion time is kept separately

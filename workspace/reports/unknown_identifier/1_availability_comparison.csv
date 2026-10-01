@@ -1,0 +1,5 @@
+checkpoint_code,observed_at,load_run_code,sku,product_name,location_code,website_available_quantity,calculated_on_hand_quantity,reserved_quantity,available_quantity,shortfall_quantity,availability_difference,difference_direction,opening_cutoff_at,website_snapshot_cutoff_at,website_copied_at,quality_status,website_quality_status
+u_d1_1200,2026-09-16 12:00:00+10:00,u_d1_1200,PH-10231,Royal Canin Medium Adult Dry Dog Food,STR-CHA,8,8,0,8,0,0,equal,2026-09-16 00:00:00+10:00,2026-09-16 00:00:00+10:00,2026-09-16 05:00:00+10:00,valid,valid
+u_d1_1200,2026-09-16 12:00:00+10:00,u_d1_1200,PH-10231,Royal Canin Medium Adult Dry Dog Food,STR-PAR,5,5,0,5,0,0,equal,2026-09-16 00:00:00+10:00,2026-09-16 00:00:00+10:00,2026-09-16 05:00:00+10:00,valid,valid
+u_d1_1200,2026-09-16 12:00:00+10:00,u_d1_1200,PH-10231,Royal Canin Medium Adult Dry Dog Food,STR-PEN,,,0,,,,,,,,missing_opening,missing_copy
+u_d1_1200,2026-09-16 12:00:00+10:00,u_d1_1200,PH-40990,PetHaven Seasonal Chew Toy,STR-PAR,,,0,,,,,,,,missing_opening,missing_copy

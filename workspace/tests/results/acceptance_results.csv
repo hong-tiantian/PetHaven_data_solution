@@ -1,0 +1,273 @@
+scenario,test_id,check_name,expected,actual,status,spec_reference
+case_1_baseline,RUN,scenario executed,completed,completed,PASS,
+case_1_baseline,T01,cp_d1_0100/PH-10231@STR-PAR/central_recorded_on_hand,5,5,PASS,Spec 6 Case 1 row 1
+case_1_baseline,T01,cp_d1_0100/PH-10231@STR-PAR/website_available,NULL,NULL,PASS,Spec 6 Case 1 row 1
+case_1_baseline,T01,cp_d1_0100/PH-10231@STR-PAR/website_quality_status,missing_copy,missing_copy,PASS,Arch 10.2
+case_1_baseline,T01,cp_d1_0100/PH-10231@STR-PAR/on_hand,5,5,PASS,Spec 6 Case 1 row 1
+case_1_baseline,T01,cp_d1_0100/PH-10231@STR-PAR/reserved,0,0,PASS,Spec 6 Case 1 row 1
+case_1_baseline,T01,cp_d1_0100/PH-10231@STR-PAR/available,5,5,PASS,Spec 6 Case 1 row 1
+case_1_baseline,T01,cp_d1_0100/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 1 row 1
+case_1_baseline,T01,cp_d1_0500/PH-10231@STR-PAR/central_recorded_on_hand,5,5,PASS,Spec 6 Case 1 row 2
+case_1_baseline,T01,cp_d1_0500/PH-10231@STR-PAR/website_available,5,5,PASS,Spec 6 Case 1 row 2
+case_1_baseline,T01,cp_d1_0500/PH-10231@STR-PAR/on_hand,5,5,PASS,Spec 6 Case 1 row 2
+case_1_baseline,T01,cp_d1_0500/PH-10231@STR-PAR/reserved,0,0,PASS,Spec 6 Case 1 row 2
+case_1_baseline,T01,cp_d1_0500/PH-10231@STR-PAR/available,5,5,PASS,Spec 6 Case 1 row 2
+case_1_baseline,T01,cp_d1_0500/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 1 row 2
+case_1_baseline,T01,cp_d1_0500/PH-10231@STR-PAR/difference,0,0,PASS,Spec 7.4 output 1
+case_1_baseline,T01,cp_d1_0930/PH-10231@STR-PAR/central_recorded_on_hand,5,5,PASS,Spec 6 Case 1 row 3
+case_1_baseline,T01,cp_d1_0930/PH-10231@STR-PAR/website_available,4,4,PASS,Spec 6 Case 1 row 3
+case_1_baseline,T01,cp_d1_0930/PH-10231@STR-PAR/on_hand,5,5,PASS,Spec 6 Case 1 row 3
+case_1_baseline,T01,cp_d1_0930/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 1 row 3
+case_1_baseline,T01,cp_d1_0930/PH-10231@STR-PAR/available,4,4,PASS,Spec 6 Case 1 row 3
+case_1_baseline,T01,cp_d1_0930/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 1 row 3
+case_1_baseline,T01,cp_d1_1400/PH-10231@STR-PAR/central_recorded_on_hand,5,5,PASS,Spec 6 Case 1 row 4
+case_1_baseline,T01,cp_d1_1400/PH-10231@STR-PAR/website_available,4,4,PASS,Spec 6 Case 1 row 4
+case_1_baseline,T01,cp_d1_1400/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 6 Case 1 row 4
+case_1_baseline,T01,cp_d1_1400/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 1 row 4
+case_1_baseline,T01,cp_d1_1400/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 1 row 4
+case_1_baseline,T01,cp_d1_1400/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 1 row 4
+case_1_baseline,T01,cp_d1_1400/PH-10231@STR-PAR/difference,4,4,PASS,Spec 7.4 output 1
+case_1_baseline,T01,cp_d1_1400/PH-20455@STR-CHA/on_hand,3,3,PASS,Background fixture
+case_1_baseline,T01,cp_d1_1400/PH-20455@STR-CHA/website_available,4,4,PASS,Background fixture
+case_1_baseline,T01,cp_d1_1500/PH-10231@STR-PAR/central_recorded_on_hand,5,5,PASS,Spec 6 Case 1 row 5
+case_1_baseline,T01,cp_d1_1500/PH-10231@STR-PAR/website_available,3,3,PASS,Spec 6 Case 1 row 5
+case_1_baseline,T01,cp_d1_1500/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 6 Case 1 row 5
+case_1_baseline,T01,cp_d1_1500/PH-10231@STR-PAR/reserved,2,2,PASS,Spec 6 Case 1 row 5
+case_1_baseline,T01,cp_d1_1500/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 1 row 5
+case_1_baseline,T01,cp_d1_1500/PH-10231@STR-PAR/shortfall,1,1,PASS,Spec 6 Case 1 row 5
+case_1_baseline,T01,cp_d1_1500/PH-10231@STR-PAR/difference,3,3,PASS,Spec 7.4 output 1
+case_1_baseline,T01,cp_d1_1530/PH-10231@STR-PAR/central_recorded_on_hand,5,5,PASS,Spec 6 Case 1 row 6
+case_1_baseline,T01,cp_d1_1530/PH-10231@STR-PAR/website_available,3,3,PASS,Spec 6 Case 1 row 6
+case_1_baseline,T01,cp_d1_1530/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 6 Case 1 row 6
+case_1_baseline,T01,cp_d1_1530/PH-10231@STR-PAR/reserved,2,2,PASS,Spec 6 Case 1 row 6
+case_1_baseline,T01,cp_d1_1530/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 1 row 6
+case_1_baseline,T01,cp_d1_1530/PH-10231@STR-PAR/shortfall,1,1,PASS,Spec 6 Case 1 row 6
+case_1_baseline,T01,cp_d1_1545/PH-10231@STR-PAR/central_recorded_on_hand,5,5,PASS,Spec 6 Case 1 row 7
+case_1_baseline,T01,cp_d1_1545/PH-10231@STR-PAR/website_available,4,4,PASS,Spec 6 Case 1 row 7
+case_1_baseline,T01,cp_d1_1545/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 6 Case 1 row 7
+case_1_baseline,T01,cp_d1_1545/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 1 row 7
+case_1_baseline,T01,cp_d1_1545/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 1 row 7
+case_1_baseline,T01,cp_d1_1545/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 1 row 7
+case_1_baseline,T01,cp_d2_0100/PH-10231@STR-PAR/central_recorded_on_hand,1,1,PASS,Spec 6 Case 1 row 8
+case_1_baseline,T01,cp_d2_0100/PH-10231@STR-PAR/website_available,4,4,PASS,Spec 6 Case 1 row 8
+case_1_baseline,T01,cp_d2_0100/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 6 Case 1 row 8
+case_1_baseline,T01,cp_d2_0100/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 1 row 8
+case_1_baseline,T01,cp_d2_0100/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 1 row 8
+case_1_baseline,T01,cp_d2_0100/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 1 row 8
+case_1_baseline,T01,cp_d2_0500/PH-10231@STR-PAR/central_recorded_on_hand,1,1,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T01,cp_d2_0500/PH-10231@STR-PAR/website_available,0,0,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T01,cp_d2_0500/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T01,cp_d2_0500/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T01,cp_d2_0500/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T01,cp_d2_0500/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T01,cp_d2_0500/PH-10231@STR-PAR/difference,0,0,PASS,Spec 7.4 output 1
+case_1_baseline,T08,cp_d2_0100/store_sale_facts_for_parramatta_sales,4,4,PASS,Spec 5.2; Arch 8.2
+case_1_baseline,T08,cp_d2_0100/central_import_rows_linked_as_duplicates,4,4,PASS,Arch 8.2
+case_1_baseline,T08,final/store_sale_facts_total,5,5,PASS,Spec 5.2
+case_1_baseline,T09,cp_d2_0500_repeat/load_status,succeeded,succeeded,PASS,Arch 12.2
+case_1_baseline,T09,cp_d2_0500_repeat/facts_first_loaded_by_run,0,0,PASS,Arch 12.2
+case_1_baseline,T09,cp_d2_0500_repeat/raw_sale_lines_extracted,5,5,PASS,Arch 5.1
+case_1_baseline,T09,cp_d2_0500_repeat/PH-10231@STR-PAR/website_available,0,0,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T09,cp_d2_0500_repeat/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T09,cp_d2_0500_repeat/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T09,cp_d2_0500_repeat/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T09,cp_d2_0500_repeat/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 1 row 9
+case_1_baseline,T10,cp_d2_0100/PH-10231@STR-PAR/opening_cutoff_at,2026-09-17 00:00,2026-09-17 00:00,PASS,Spec 5.2; Arch 9.3
+case_1_baseline,T10,cp_d2_0100/PH-10231@STR-PAR/opening_quantity,1,1,PASS,Spec 5.2
+case_1_baseline,T10,cp_d2_0100/PH-10231@STR-PAR/movement_quantity,0,0,PASS,Spec 5.2
+case_1_baseline,T12,cp_d2_0500/W-1001-1/effective_status,ready,ready,PASS,Spec 5.3; Arch 11.3
+case_1_baseline,T12,cp_d2_0500/W-1001-1/allocated,1,1,PASS,Spec 7.4
+case_1_baseline,T17,cp_d1_1500/W-1001-1/effective_status,ready,ready,PASS,Spec 6 Case 1
+case_1_baseline,T17,cp_d1_1500/W-1001-1/allocated,1,1,PASS,Spec 7.3
+case_1_baseline,T17,cp_d1_1500/W-1001-1/line_shortfall,0,0,PASS,Spec 7.3
+case_1_baseline,T17,cp_d1_1500/W-1002-1/effective_status,awaiting_pick,awaiting_pick,PASS,Spec 6 Case 1
+case_1_baseline,T17,cp_d1_1500/W-1002-1/allocated,0,0,PASS,Spec 7.3
+case_1_baseline,T17,cp_d1_1500/W-1002-1/line_shortfall,1,1,PASS,Spec 7.3
+case_1_baseline,T17,cp_d1_1545/W-1002-1/effective_status,cancelled,cancelled,PASS,Spec 5.5
+case_1_baseline,T17,cp_d1_1545/W-1002-1/cancellation_reason,insufficient_stock,insufficient_stock,PASS,Spec 4.2 activity C
+case_1_baseline,T17,cp_d1_1545/W-1002-1/cancelled_at,2026-09-16 15:45,2026-09-16 15:45,PASS,Spec 5.5
+case_1_baseline,T17,cp_d1_1545/W-1002-1/allocated,NULL,NULL,PASS,Arch 13.2
+case_1_baseline,T17,cp_hist_d1_1500/W-1002-1/effective_status,awaiting_pick,awaiting_pick,PASS,Spec 7.4
+case_1_baseline,T17,cp_hist_d1_1500/W-1002-1/line_shortfall,1,1,PASS,Spec 7.4
+case_1_baseline,T22,final/central_store_sale_movements,5,5,PASS,Spec 5.2
+case_1_baseline,T22,final/central_movement_applications,5,5,PASS,Arch 11.1
+case_1_baseline,T22,final/central_current_on_hand_PH-10231@STR-PAR,1,1,PASS,Arch 11.2
+case_1_baseline,T23,cp_d1_1500/website_snapshot_cutoff_at,2026-09-16 00:00,2026-09-16 00:00,PASS,Spec 7.4 output 3
+case_1_baseline,T23,cp_d1_1500/website_copied_at,2026-09-16 05:00,2026-09-16 05:00,PASS,Spec 7.4 output 3
+case_1_baseline,T23,cp_d1_1500/website_basis_age,15:00:00,15:00:00,PASS,Spec 7.4 output 3
+case_1_baseline,T23,cp_d1_1500/website_copy_age,10:00:00,10:00:00,PASS,Arch 13.3
+case_1_baseline,T23,cp_d1_1500/website_copy_lag,05:00:00,05:00:00,PASS,Spec 7.4
+case_1_baseline,T23,cp_d2_0500/website_basis_age,05:00:00,05:00:00,PASS,Spec 7.4 output 3
+case_1_baseline,T23,cp_d2_0500/website_copy_age,00:00:00,00:00:00,PASS,Arch 13.3
+case_1_baseline,T23,event/store_sales:sale:S-0123-0001:1/occurred_at,2026-09-16 10:15,2026-09-16 10:15,PASS,Spec 7.4 output 3
+case_1_baseline,T23,event/store_sales:sale:S-0123-0001:1/source_recorded_at,2026-09-16 10:15,2026-09-16 10:15,PASS,Spec 3.2
+case_1_baseline,T23,event/store_sales:sale:S-0123-0001:1/scenario_published_at,2026-09-16 14:00,2026-09-16 14:00,PASS,Arch 9.1
+case_1_baseline,T23,event/store_sales:sale:S-0123-0001:1/simulated_delay,03:45:00,03:45:00,PASS,Arch 9.1
+case_1_baseline,T23,event/store_sales:sale:S-0123-0001:1/warehouse_loaded_at_recorded,true,true,PASS,Arch 9.1
+case_1_improved,RUN,scenario executed,completed,completed,PASS,
+case_1_improved,T02,cp_d1_1400/PH-10231@STR-PAR/website_available,4,4,PASS,Spec 7.3 step 1
+case_1_improved,T02,cp_d1_1400/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 7.3 step 1
+case_1_improved,T02,cp_d1_1400/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 7.3 step 1
+case_1_improved,T02,cp_d1_1400/PH-10231@STR-PAR/available,0,0,PASS,Spec 7.3 step 1
+case_1_improved,T02,cp_d1_1500/PH-10231@STR-PAR/website_available,4,4,PASS,Spec 7.3 step 2
+case_1_improved,T02,cp_d1_1500/PH-10231@STR-PAR/available,0,0,PASS,Spec 7.3 step 2
+case_1_improved,T02,cp_d1_1500/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 7.3 step 2
+case_1_improved,T02,chk_sarah_1500/overall_result,insufficient,insufficient,PASS,Spec 7.3 step 2
+case_1_improved,T02,chk_sarah_1500/PH-10231/requested_quantity,1,1,PASS,Spec 7.3 step 2
+case_1_improved,T02,chk_sarah_1500/PH-10231/available_quantity,0,0,PASS,Spec 7.3 step 2
+case_1_improved,T02,chk_sarah_1500/PH-10231/line_result,insufficient,insufficient,PASS,Spec 7.3 step 2
+case_1_improved,T02,final/web_order_count,1,1,PASS,Arch 14.2
+case_1_improved,T02,final/sarah_order_exists,false,false,PASS,Arch 14.2
+case_2,RUN,scenario executed,completed,completed,PASS,
+case_2,T03,cp_d1_0500/PH-10231@STR-PAR/website_available,1,1,PASS,Spec 6 Case 2 row 1
+case_2,T03,cp_d1_0500/PH-10231@STR-PAR/on_hand,1,1,PASS,Spec 6 Case 2 row 1
+case_2,T03,cp_d1_0500/PH-10231@STR-PAR/reserved,0,0,PASS,Spec 6 Case 2 row 1
+case_2,T03,cp_d1_0500/PH-10231@STR-PAR/available,1,1,PASS,Spec 6 Case 2 row 1
+case_2,T03,cp_d1_0500/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 2 row 1
+case_2,T03,cp_d1_1400/PH-10231@STR-PAR/website_available,1,1,PASS,Spec 6 Case 2 row 2
+case_2,T03,cp_d1_1400/PH-10231@STR-PAR/on_hand,0,0,PASS,Spec 6 Case 2 row 2
+case_2,T03,cp_d1_1400/PH-10231@STR-PAR/reserved,0,0,PASS,Spec 6 Case 2 row 2
+case_2,T03,cp_d1_1400/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 2 row 2
+case_2,T03,cp_d1_1400/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 2 row 2
+case_2,T03,cp_d1_1800/PH-10231@STR-PAR/website_available,0,0,PASS,Spec 6 Case 2 row 3
+case_2,T03,cp_d1_1800/PH-10231@STR-PAR/on_hand,0,0,PASS,Spec 6 Case 2 row 3
+case_2,T03,cp_d1_1800/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 2 row 3
+case_2,T03,cp_d1_1800/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 2 row 3
+case_2,T03,cp_d1_1800/PH-10231@STR-PAR/shortfall,1,1,PASS,Spec 6 Case 2 row 3
+case_2,T03,cp_d1_1800/W-2001-1/line_shortfall,1,1,PASS,Spec 7.4 output 2
+case_2,T03,cp_d1_1800/W-2001-1/allocated,0,0,PASS,Spec 7.4 output 2
+case_2,T03,cp_d2_0100/PH-10231@STR-PAR/central_recorded_on_hand,0,0,PASS,Spec 6 Case 2 row 4
+case_2,T03,cp_d2_0100/PH-10231@STR-PAR/website_available,0,0,PASS,Spec 6 Case 2 row 4
+case_2,T03,cp_d2_0100/PH-10231@STR-PAR/on_hand,0,0,PASS,Spec 6 Case 2 row 4
+case_2,T03,cp_d2_0100/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 2 row 4
+case_2,T03,cp_d2_0100/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 2 row 4
+case_2,T03,cp_d2_0100/PH-10231@STR-PAR/shortfall,1,1,PASS,Spec 6 Case 2 row 4
+case_2,T03,cp_d2_0500/PH-10231@STR-PAR/website_available,0,0,PASS,Spec 6 Case 2 row 5
+case_2,T03,cp_d2_0500/PH-10231@STR-PAR/on_hand,0,0,PASS,Spec 6 Case 2 row 5
+case_2,T03,cp_d2_0500/PH-10231@STR-PAR/reserved,1,1,PASS,Spec 6 Case 2 row 5
+case_2,T03,cp_d2_0500/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 2 row 5
+case_2,T03,cp_d2_0500/PH-10231@STR-PAR/shortfall,1,1,PASS,Spec 6 Case 2 row 5
+case_2,T03,cp_d2_0900/PH-10231@STR-PAR/website_available,0,0,PASS,Spec 6 Case 2 row 6
+case_2,T03,cp_d2_0900/PH-10231@STR-PAR/on_hand,0,0,PASS,Spec 6 Case 2 row 6
+case_2,T03,cp_d2_0900/PH-10231@STR-PAR/reserved,0,0,PASS,Spec 6 Case 2 row 6
+case_2,T03,cp_d2_0900/PH-10231@STR-PAR/available,0,0,PASS,Spec 6 Case 2 row 6
+case_2,T03,cp_d2_0900/PH-10231@STR-PAR/shortfall,0,0,PASS,Spec 6 Case 2 row 6
+case_2,T03,cp_d2_0900/W-2001-1/effective_status,cancelled,cancelled,PASS,Spec 6 Case 2 row 6
+case_2,T03,cp_d2_0900/W-2001-1/cancellation_reason,insufficient_stock,insufficient_stock,PASS,Spec 4.2 activity C
+movement_checks,RUN,scenario executed,completed,completed,PASS,
+movement_checks,T04,m_d1_1600/PH-10231@STR-CHA/on_hand,8,8,PASS,Spec 4.2 activity B
+movement_checks,T04,m_d1_1600/PH-10231@STR-CHA/reserved,2,2,PASS,Spec 4.2 activity B
+movement_checks,T04,m_d1_1600/PH-10231@STR-CHA/available,6,6,PASS,Spec 5.1
+movement_checks,T04,m_d2_0100/PH-10231@STR-CHA/on_hand,6,6,PASS,Spec 5.2
+movement_checks,T04,m_d2_0100/PH-10231@STR-CHA/reserved,0,0,PASS,Spec 5.2
+movement_checks,T04,m_d2_0100/PH-10231@STR-CHA/available,6,6,PASS,Spec 5.3
+movement_checks,T04,m_d2_0100/W-3201-1/effective_status,collected,collected,PASS,Spec 4.2 activity B
+movement_checks,T05,m_d1_1000/PH-20455@STR-PAR/on_hand,10,10,PASS,Spec 4.2 activity A
+movement_checks,T05,m_d1_1000/PH-20455@STR-PAR/reserved,3,3,PASS,Spec 4.2 activity A
+movement_checks,T05,m_d1_1000/PH-20455@STR-PAR/available,7,7,PASS,Spec 5.1
+movement_checks,T05,m_d1_1000/PH-20455@STR-PAR/website_available,7,7,PASS,Spec 5.3
+movement_checks,T05,m_d1_1100/PH-20455@STR-PAR/on_hand,10,10,PASS,Spec 4.2 activity C
+movement_checks,T05,m_d1_1100/PH-20455@STR-PAR/reserved,0,0,PASS,Spec 4.2 activity C
+movement_checks,T05,m_d1_1100/PH-20455@STR-PAR/available,10,10,PASS,Spec 5.1
+movement_checks,T05,m_d1_1100/PH-20455@STR-PAR/website_available,10,10,PASS,Spec 5.3
+movement_checks,T05,m_d1_1100/W-3001-1/effective_status,cancelled,cancelled,PASS,Spec 5.5
+movement_checks,T05,m_d1_1100/W-3001-1/cancellation_reason,customer_request,customer_request,PASS,Spec 4.2 activity C
+movement_checks,T05,final/W-3001_status_events,2,2,PASS,Spec 5.5
+movement_checks,T06,m_d1_1000/PH-10231@DC-MOO/on_hand,60,60,PASS,Spec 4.3 activity A
+movement_checks,T06,m_d1_1000/PH-10231@DC-MOO/central_recorded_on_hand,40,40,PASS,Spec 4.3 activity A
+movement_checks,T06,m_d1_1000/PH-10231@STR-PAR/on_hand,5,5,PASS,Spec 4.3 activity A
+movement_checks,T06,m_d1_1000/PH-10231@STR-CHA/on_hand,8,8,PASS,Spec 4.3 activity A
+movement_checks,T06,m_d1_1100/PH-10231@DC-MOO/central_recorded_on_hand,60,60,PASS,Spec 3.2
+movement_checks,T07,m_d1_1200/PH-10231@DC-MOO/on_hand,60,60,PASS,Spec 4.3 activity B
+movement_checks,T07,m_d1_1200/PH-10231@STR-PAR/on_hand,5,5,PASS,Spec 4.3 activity B
+movement_checks,T07,m_d1_1300/PH-10231@DC-MOO/on_hand,50,50,PASS,Spec 4.3 activity B
+movement_checks,T07,m_d1_1300/PH-10231@STR-PAR/on_hand,5,5,PASS,Spec 4.3 activity B
+movement_checks,T07,m_d1_1300/PH-10231@DC-MOO/website_available,40,40,PASS,Spec 5.3
+movement_checks,T07,m_d1_1300/PH-10231@DC-MOO/difference,-10,-10,PASS,Arch 10.2
+movement_checks,T07,m_d1_1600/PH-10231@DC-MOO/on_hand,50,50,PASS,Spec 4.3 activity B
+movement_checks,T07,m_d1_1600/PH-10231@STR-PAR/on_hand,15,15,PASS,Spec 4.3 activity B
+movement_checks,T07,m_d1_1600/PH-10231@STR-PAR/website_available,5,5,PASS,Spec 4.3 activity B
+movement_checks,T07,final/transfer_movement_facts_TR-7001,2,2,PASS,Arch 4.3
+movement_checks,T11,m_d2_0100/PH-20455@STR-PAR/opening_quantity,10,10,PASS,Arch 9.3
+movement_checks,T11,m_d2_0100/PH-20455@STR-PAR/movement_quantity,-1,-1,PASS,Arch 9.3
+movement_checks,T11,m_d2_0100/PH-20455@STR-PAR/on_hand,9,9,PASS,Arch 9.3
+movement_checks,T11,m_d2_0100/PH-20455@STR-PAR/central_recorded_on_hand,9,9,PASS,Spec 3.2
+movement_checks,T13,m_d2_0500/PH-10231@STR-CHA/opening_quantity,8,8,PASS,Spec 5.3
+movement_checks,T13,m_d2_0500/PH-10231@STR-CHA/movement_quantity,-2,-2,PASS,Spec 5.3
+movement_checks,T13,m_d2_0500/PH-10231@STR-CHA/website_available,6,6,PASS,Spec 5.3
+movement_checks,T13,m_d2_0500/PH-10231@STR-CHA/on_hand,6,6,PASS,Spec 5.3
+movement_checks,T13,m_d2_0500/PH-10231@STR-CHA/reserved,0,0,PASS,Spec 5.3
+movement_checks,T16,m_d1_1400/PH-30710@STR-NEW/quality_status,missing_opening,missing_opening,PASS,Arch 9.3
+movement_checks,T16,m_d1_1400/PH-30710@STR-NEW/on_hand,NULL,NULL,PASS,Arch 9.3
+movement_checks,T16,m_d1_1400/PH-30710@STR-NEW/available,NULL,NULL,PASS,Arch 13.3
+movement_checks,T16,m_d1_1400/PH-30710@STR-NEW/reserved,0,0,PASS,Arch 13.3
+movement_checks,T16,chk_new_greenies_1400/overall_result,unknown,unknown,PASS,Arch 13.1
+movement_checks,T16,m_d2_0100/PH-30710@STR-NEW/quality_status,valid,valid,PASS,Arch 11.2
+movement_checks,T16,m_d2_0100/PH-30710@STR-NEW/on_hand,6,6,PASS,Arch 11.2
+movement_checks,T18,m_d1_1200/PH-30710@DC-MOO/on_hand,50,50,PASS,Arch 9.2
+movement_checks,T18,m_recon_d1_1200/PH-30710@DC-MOO/on_hand,45,45,PASS,Arch 9.2
+movement_checks,T18,m_d1_1400/PH-30710@DC-MOO/on_hand,39,39,PASS,Arch 9.2
+movement_checks,T19,m_d1_1100/PH-10231@STR-NEW/on_hand,1,1,PASS,Arch 10.4
+movement_checks,T19,m_d1_1100/PH-10231@STR-NEW/reserved,2,2,PASS,Arch 10.4
+movement_checks,T19,m_d1_1100/PH-10231@STR-NEW/shortfall,1,1,PASS,Arch 10.4
+movement_checks,T19,m_d1_1100/PH-10231@STR-NEW/website_available,0,0,PASS,Spec 5.3
+movement_checks,T19,m_d1_1100/W-3099-1/allocated,1,1,PASS,Arch 10.4
+movement_checks,T19,m_d1_1100/W-3099-1/line_shortfall,0,0,PASS,Arch 10.4
+movement_checks,T19,m_d1_1100/W-3105-1/allocated,0,0,PASS,Arch 10.4
+movement_checks,T19,m_d1_1100/W-3105-1/line_shortfall,1,1,PASS,Arch 10.4
+movement_checks,T20,chk_cha_multi_1600/overall_result,insufficient,insufficient,PASS,Arch 10.4
+movement_checks,T20,chk_cha_multi_1600/PH-10231/line_result,sufficient,sufficient,PASS,Arch 10.4
+movement_checks,T20,chk_cha_multi_1600/PH-10231/available_quantity,6,6,PASS,Arch 10.4
+movement_checks,T20,chk_cha_multi_1600/PH-20455/line_result,insufficient,insufficient,PASS,Arch 10.4
+movement_checks,T20,chk_cha_multi_1600/PH-20455/available_quantity,0,0,PASS,Arch 9.3
+movement_checks,T20,final/web_order_count,4,4,PASS,Arch 10.4
+movement_checks,T26,m_d1_1400/PH-20455@DC-MOO/on_hand,28,28,PASS,Arch 10.5
+movement_checks,T26,m_d1_1600/PH-20455@DC-MOO/on_hand,30,30,PASS,Arch 10.5
+movement_checks,T26,final/adjustment_facts_PH-20455@DC-MOO,1,1,PASS,Arch 10.5
+movement_checks,T26,final/reversal_references_adjustment,true,true,PASS,Arch 10.5
+movement_checks,T26,step/reopen_cancelled_order/status,expected_error,expected_error,PASS,Arch 10.5
+movement_checks,T26,final/W-3001_status_events_after_rejected_correction,2,2,PASS,Arch 10.5
+unknown_identifier,RUN,scenario executed,completed,completed,PASS,
+unknown_identifier,T14,u_d1_1100/load_status,rejected,rejected,PASS,Arch 6
+unknown_identifier,T14,u_d1_1100/issue_count/unmatched_product,1,1,PASS,Spec 5.4
+unknown_identifier,T14,u_d1_1100/issue_count/unmatched_location,1,1,PASS,Spec 5.4
+unknown_identifier,T14,u_d1_1100/facts_first_loaded_by_run,0,0,PASS,Arch 6
+unknown_identifier,T14,chk_par_rc_1100/overall_result,unknown,unknown,PASS,Arch 13.1
+unknown_identifier,T14,u_d1_1200/load_status,succeeded,succeeded,PASS,Arch 5.2
+unknown_identifier,T14,chk_par_rc_1200/overall_result,sufficient,sufficient,PASS,Arch 13.1
+unknown_identifier,T14,final/sale_S-0123-0901_mapped_sku,PH-40990,PH-40990,PASS,Spec 5.4
+unknown_identifier,T14,final/mapping_change_rows,1,1,PASS,Arch 5.2
+conflicting_duplicate,RUN,scenario executed,completed,completed,PASS,
+conflicting_duplicate,T15,c_d1_1100/load_status,succeeded,succeeded,PASS,Arch 12.2
+conflicting_duplicate,T15,c_d2_0200/load_status,rejected,rejected,PASS,Arch 8.2
+conflicting_duplicate,T15,c_d2_0200/issue_count/conflicting_duplicate,1,1,PASS,Arch 8.2
+conflicting_duplicate,T15,c_d2_0200/conflict_raw_tables,raw.stock_stock_movement;raw.store_sales_sale_line,raw.stock_stock_movement;raw.store_sales_sale_line,PASS,Arch 8.2
+conflicting_duplicate,T15,c_d2_0200/facts_first_loaded_by_run,0,0,PASS,Arch 8.2
+conflicting_duplicate,T15,final/fact_quantity_store_sales:sale:S-0123-0001:1,-1,-1,PASS,Arch 7.2
+failed_publication,RUN,scenario executed,completed,completed,PASS,
+failed_publication,T21,f_d1_1100/load_status,failed,failed,PASS,Arch 12.2
+failed_publication,T21,f_d1_1100/facts_first_loaded_by_run,0,0,PASS,Arch 12.2
+failed_publication,T21,f_d1_1100/published_at_is_null,true,true,PASS,Arch 12.2
+failed_publication,T21,f_d1_1100/raw_sale_lines_extracted,1,1,PASS,Arch 12.2
+failed_publication,T21,f_d1_1100/ready_report_runs,0,0,PASS,Arch 13.2
+failed_publication,T21,chk_par_rc_1100/overall_result,unknown,unknown,PASS,Arch 13.1
+failed_publication,T21,f_d1_1200/load_status,succeeded,succeeded,PASS,Arch 12.2
+failed_publication,T21,f_d1_1200/PH-10231@STR-PAR/on_hand,4,4,PASS,Arch 12.2
+source_completeness,RUN,scenario executed,completed,completed,PASS,
+source_completeness,T24,s_d1_1000/load_status,rejected,rejected,PASS,Arch 12.1
+source_completeness,T24,s_d1_1000/issue_count/incomplete_extract,1,1,PASS,Arch 12.1
+source_completeness,T24,s_d1_1000/missing_extract_table,online.web_order_line,online.web_order_line,PASS,Arch 12.1
+source_completeness,T24,s_d1_1000/facts_first_loaded_by_run,0,0,PASS,Arch 12.1
+source_completeness,T24,chk_par_rc_1000/overall_result,unknown,unknown,PASS,Arch 13.1
+source_completeness,T24,s_d1_1100/load_status,succeeded,succeeded,PASS,Arch 12.1
+source_completeness,T24,s_d1_1100/extract_manifest_rows,19,19,PASS,Arch 12.1
+source_completeness,T24,s_d1_1100/PH-10231@STR-PAR/reserved,1,1,PASS,Arch 12.1
+pre_cutoff_late_record,RUN,scenario executed,completed,completed,PASS,
+pre_cutoff_late_record,T25,l_d2_0300/load_status,succeeded,succeeded,PASS,Arch 10.5
+pre_cutoff_late_record,T25,l_d2_0300/issue_count/pre_cutoff_late_event,1,1,PASS,Arch 10.5
+pre_cutoff_late_record,T25,l_d2_0300/PH-10231@STR-PAR/quality_status,reconciliation_required,reconciliation_required,PASS,Arch 10.5
+pre_cutoff_late_record,T25,l_d2_0300/PH-10231@STR-PAR/on_hand,NULL,NULL,PASS,Arch 10.5
+pre_cutoff_late_record,T25,l_d2_0300/PH-10231@STR-PAR/available,NULL,NULL,PASS,Arch 10.5
+pre_cutoff_late_record,T25,chk_par_rc_0300/overall_result,unknown,unknown,PASS,Arch 13.1
+pre_cutoff_late_record,T25,l_d2_0300/PH-10231@STR-CHA/quality_status,valid,valid,PASS,Arch 10.5
+pre_cutoff_late_record,T25,l_d2_0300/PH-10231@STR-CHA/on_hand,8,8,PASS,Arch 10.5

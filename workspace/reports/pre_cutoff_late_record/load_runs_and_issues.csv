@@ -1,0 +1,2 @@
+run_code,source_as_of_at,status,summary_error,rule_code,severity,source_reference,message
+l_d2_0300,2026-09-17 03:00:00+10:00,succeeded,1 warning(s),pre_cutoff_late_event,warning,stock:movement:MV-ADJ-0901:0,"Event at 2026-09-16 22:00:00+10 was recorded at 2026-09-17 02:00:00+10, after snapshot SNAP-20260917 (cutoff 2026-09-17 00:00:00+10) was created at 2026-09-17 01:00:00+10; it is not in that snapshot and must be reconciled"

@@ -1,0 +1,2 @@
+event_kind,source_identity,event_detail,sku,location_code,occurred_at,source_recorded_at,first_load_run_code,scenario_published_at,simulated_delay,simulated_delay_label,extract_started_at,warehouse_loaded_at,published_at,actual_load_runtime
+physical_movement,stock:movement:MV-ADJ-0901:0,adjustment,PH-10231,STR-PAR,2026-09-16 22:00:00+10:00,2026-09-17 02:00:00+10:00,l_d2_0300,2026-09-17 03:00:00+10:00,5:00:00,simulated (scenario checkpoint time minus event time),2026-10-01 15:26:22.872749+10:00,2026-10-01 15:26:23.425272+10:00,2026-10-01 15:26:23.498648+10:00,0:00:00.639560

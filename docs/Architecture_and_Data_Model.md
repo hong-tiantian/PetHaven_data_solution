@@ -1,14 +1,14 @@
 # PetHaven inventory prototype: architecture and data model
 
-1 October 2026 · Design draft for implementation
+1 October 2026 · Implementation design, updated to match the prototype in `workspace/`
 
 ## 1. Purpose and authority
 
 This document translates [Assignment2_Spec.md](../00_req_feedback/Assignment2_Spec.md) into an implementation design. The Spec remains the authority for business definitions, operating schedules, scope, and expected scenario results. The [assignment brief](../00_req_feedback/Assignment2_Requirements.md) defines the required deliverables. This document defines database responsibilities, names, table grains, integration rules, calculations, and a build sequence.
 
-The design is not a description of the current implementation. The existing `db/schema.sql`, `db/seed_sources.sql`, and README still describe the previous customer/pet project. They must not be treated as the inventory model.
+The prototype in `workspace/` implements this design. Where implementation needed a decision that an earlier draft left open, the decision is recorded in the relevant section of this document. What is not yet implemented, and the latest verification results, are listed in [implementation_notes.md](implementation_notes.md). The earlier customer/pet model and its Supabase scripts have been removed from the repository; they remain in Git history only.
 
-The decisions below are the proposed implementation baseline. They do not claim tutor approval of a deployment environment. No source database, SQL implementation, or original business Spec was changed to create this document.
+The decisions below are the implementation baseline. They do not claim tutor approval. The business Spec was not changed to create this document.
 
 ### 1.1 Intended result
 
@@ -25,16 +25,18 @@ The warehouse does not accept live customer orders or control real reservations.
 
 ### 1.2 Implementation choices
 
-| Decision | Proposed choice | Reason |
+| Decision | Choice | Reason |
 | --- | --- | --- |
 | Database model | Relational source tables and a dimensional warehouse | The problem concerns identifiable events, time, quantities, and shared dimensions |
-| SQL dialect | PostgreSQL | Matches the workshop notes; execution location remains to be confirmed |
+| Execution environment | The provided Lab Environment, unchanged (`docker-compose.yml`, `python/Dockerfile`, `python/requirements.txt`); project code in `workspace/` | Required by the assignment brief. The compose file mounts only `./workspace`, so code placed elsewhere cannot run in the lab |
+| SQL dialect | PostgreSQL 15 (lab image `postgres:15`) | Matches the workshop notes and the lab |
 | Source representation | Three named schemas in one project database | Keeps business ownership separate and the lab prototype manageable |
+| Scenario isolation | One isolated database per scenario (`pethaven_test_<scenario>`) on the lab server | Baseline and improved runs cannot mix; the lab's own `lab` database and shared databases are never reset |
 | Integration | SQL transformations, called by a small Python runner | Makes the required extraction and transformation SQL inspectable and repeatable |
 | Initial extraction | Full extraction of the small scenario dataset at each checkpoint | Avoids an unfinished change-capture implementation; supports retries and missing-record tests |
 | Historical evidence | Immutable raw extracts, append-only event facts, saved report observations | Preserves both original evidence and the answer produced at a checkpoint |
 | Product/location matching | Explicit reference tables | No customer matching, graph database, or enterprise MDM service is required |
-| User interface | Three reporting outputs and a simulated stock check | The dashboard framework can be chosen after the data contracts are stable |
+| User interface | Three SQL report views with CSV export, and a simulated stock check | The report contracts are stable and tested; a graphical dashboard is not yet chosen |
 
 Full extraction is a prototype choice, not a production scale recommendation. A later incremental extractor must handle changes to existing orders, late arrivals, and retries before replacing it.
 
@@ -56,7 +58,7 @@ Central also processes locally recorded physical movements hourly. Its current s
 
 The website records its own orders immediately. Its daily stock refresh must not be described as a daily refresh of all online records.
 
-### 2.2 Proposed integration flow
+### 2.2 Integration flow
 
 ```mermaid
 flowchart TD
@@ -95,7 +97,7 @@ Bronze, Silver, and Gold may be secondary labels in the report: raw extraction, 
 
 ### 3.1 Schemas to create
 
-Create these nine schemas in the project database. A schema is a namespace, not an additional database server.
+Create these nine schemas in each project database (one per scenario, section 14.1). A schema is a namespace, not an additional database server.
 
 | Schema | Contents |
 | --- | --- |
@@ -176,7 +178,7 @@ Do not add a comment to every obvious assignment, join, or SQL keyword. Explain 
 
 #### Schema descriptions
 
-Use the following English descriptions in `db/01_schemas.sql`, after creating the corresponding schemas:
+Use the following English descriptions in `workspace/db/01_schemas.sql`, after creating the corresponding schemas:
 
 ```sql
 COMMENT ON SCHEMA src_store_sales IS
@@ -241,7 +243,7 @@ Use short inline explanations at the point where an implementation could otherwi
 
 #### Script header example
 
-Use a concise header with concrete values for the actual script. This example describes the proposed warehouse loader; update it if the implementation contract changes:
+Use a concise header with concrete values for the actual script. This example is the header of the warehouse loader (`workspace/db/etl/load_warehouse.sql`); update it if the implementation contract changes:
 
 ```sql
 -- Purpose: Publish validated records from one load run to the warehouse.
@@ -263,6 +265,16 @@ Before merging an implementation change, check that the affected objects have En
 ## 4. Source data model
 
 The table lists below define the logical minimum. Add technical implementation fields only when their purpose is documented. Required cross-row rules must be enforced by a source write procedure or transaction and verified in tests; a row-level check constraint alone cannot enforce them.
+
+The source write procedures are in `workspace/db/source_actions/`:
+
+| Source | Procedures |
+| --- | --- |
+| Store sales | `src_store_sales.record_sale` |
+| Online orders | `src_online.place_order`, `src_online.change_order_status` |
+| Central stock | `src_stock.bootstrap_opening_snapshot` (first fixture balance only), `record_supplier_receipt`, `create_transfer`, `dispatch_transfer`, `receive_transfer`, `record_adjustment`, `record_reversal` |
+
+Each procedure runs in the caller's transaction, so a header and its lines, or a current status and its history event, are written together.
 
 ### 4.1 Store sales: `src_store_sales`
 
@@ -307,6 +319,8 @@ The `source_snapshot_id` in `web_stock_copy` is a reference to central's record,
 
 There is no independent reservation table. Active reservation quantities are derived from lines and history. A rejected simulated request does not create an accepted `web_order`.
 
+**Order acceptance by the existing website.** Spec 4.2 steps 2–3 say the website accepts an order only when its own calculation shows enough stock. `src_online.place_order` therefore calls `src_online.website_available_quantity`, the Spec 5.3 formula over the website's own copy and order history, for every line. If any line is short, it raises an error and writes nothing. This is why the baseline run accepts Sarah's order: the website's outdated calculation still shows four bags. When the website has no copy for a product and location, the source treats it as out of stock (zero). The warehouse baseline (section 10.2) reports the same situation as unknown (`missing_copy`), because the warehouse does not guess.
+
 ### 4.3 Central stock: `src_stock`
 
 | Table | Grain and key | Required attributes and relationships |
@@ -314,6 +328,7 @@ There is no independent reservation table. Active reservation quantities are der
 | `product` | One product; PK `sku` | `product_name`, `brand`, `category`, `pack_size`, `pack_unit`, `is_active` |
 | `product_barcode` | One barcode-to-product link; PK `barcode` | FK `sku`; several barcodes may identify one SKU |
 | `location` | One physical location; PK `location_code` | `location_name`, `location_type` (`store` or `dc`), `suburb` |
+| `external_location_code` | One code another existing system uses for a central location; PK `(system_code, external_code)` | `system_code` (`store_sales` or `online`), FK `location_code` |
 | `stock_transfer` | One transfer; PK `transfer_id` | FKs `origin_location_code`, `destination_location_code`, `created_at`, `current_status`; origin and destination must differ |
 | `stock_transfer_line` | One transfer line; PK `(transfer_id, line_id)` | FK to header, FK `sku`, positive `quantity` |
 | `stock_movement` | One physical change at one location; PK `movement_id` | FKs `sku`, `location_code`; `movement_type`, signed `quantity`, `occurred_at`, `recorded_at`; origin identity and optional references described below |
@@ -328,6 +343,8 @@ There is no independent reservation table. Active reservation quantities are der
 - Nullable `delivery_reference` and `supplier_reference`: required as appropriate for a supplier receipt; no full purchasing subsystem is needed.
 - Nullable `reason_code`: required for an adjustment or reversal.
 - Nullable `reverses_movement_id`: self-FK when reversing an existing central movement.
+
+`external_location_code` exists because the existing 1 am import must translate till store codes (for example `0123`), and the 5 am refresh must translate central codes into website pickup codes (for example `store-parramatta`). These jobs ran before the warehouse existed, so they use central's own list rather than the warehouse's `ref` mappings. Integration does not trust this table; it uses only the reviewed `ref.location_identifier` mappings (section 5.2). The table is still extracted to `raw` like every other source table.
 
 The four origin-identity columns form a unique constraint. An overnight import uses the original store sale or online collection identity. A locally created movement uses its own stock movement ID and origin system `stock`. Section 8 defines the identities exactly.
 
@@ -421,11 +438,14 @@ Create these staging tables:
 | --- | --- | --- |
 | `product` | One canonical SKU in the run | SKU and validated product attributes |
 | `location` | One canonical location in the run | Canonical code and validated attributes |
+| `stock_event_candidate` | One raw representation of a physical event line | Raw table and record ID, origin identity, whether it is the original representation, matched SKU and location, type, signed quantity, event time, recording time, supporting header/event row |
 | `stock_event` | One canonical physical event line | Origin identity, SKU, canonical location, type, signed quantity, event time, original recording time |
 | `order_line` | One online order line | Order/line IDs, SKU, canonical location, quantity, placement time, fulfilment type |
 | `order_status_event` | One status event | Event/order IDs, sequence, previous/new status, times, reason, correction reference |
 | `stock_snapshot` | One snapshot/product/location balance | Snapshot ID, cutoff, creation time, quantity |
 | `web_stock_copy` | One refresh/product/location balance | Copy ID, referenced snapshot, cutoff, copy time, quantity |
+
+`stock_event_candidate` implements step 1 of section 8.2: every representation is staged first, then compared. A canonical `stock_event` is created only for an identity whose representations are all matched and agree, and it takes its attributes from the original representation.
 
 For stock-event candidates, direct sales use sale completion time and header recording time. Direct collections expand a collection status event into one physical movement per order line. Locally created central movements are read directly. Imported central sales/collections supply additional evidence for the same origin identity.
 
@@ -442,6 +462,13 @@ Validate before loading:
 Do not infer an unrecorded sale, collection, receipt, or cancellation to make a quantity look reasonable. Do not fill missing quantities with zero.
 
 For the first implementation, any unresolved error blocks warehouse publication for the whole load. Preserve the raw extract and issue records. Warnings may be published with an explicit warning count. This conservative rule avoids releasing half an order or a stock answer missing an unmatched sale. Section 13 describes how reports handle the last successful load.
+
+A pre-cutoff late record (section 10.5) is recorded as a **warning** (`pre_cutoff_late_event`), not an error. Treating it as an error would block every product in the load because of one product/location. Instead, the load publishes and the calculation marks only the affected pair `reconciliation_required`, with no stock quantity.
+
+Validation runs in two routines, in the same transaction:
+
+- `stg.validate_sources` (`workspace/db/etl/validate_sources.sql`) handles rules 1, 2 (mapping refresh), 4 and 6, plus mapping targets.
+- `stg.prepare_staging` (`workspace/db/etl/prepare_staging.sql`) handles unmatched identifiers, rules 5 and 7, conflicts with already published facts, and late records.
 
 ## 7. Dimensional warehouse: `dw`
 
@@ -663,11 +690,21 @@ Use a SQL window sum with a frame ending at the previous row. An order is at ris
 - A correction to order state appends an explicit correction status event at its effective correction time, linked through `corrects_event_id`. Validate the corrected state and any required compensating physical movement together. This is correction handling, not a customer return workflow. Until this path is implemented, reject it visibly rather than treating it as an ordinary transition.
 - A late event after the selected opening cutoff can enter a later load and change a newly calculated observation. Earlier saved observations remain unchanged.
 - A newly discovered event before the opening cutoff raises a reconciliation issue: the snapshot may or may not already include it. Do not simply subtract it after the cutoff. Block the affected calculation until its coverage is established or a new explicitly identified reconciled snapshot/correction is provided.
+  - **Detection.** An event is late for snapshot S when its occurrence time is before S's cutoff but its source recording time is after S's creation time. Such an event cannot be inside S.
+  - **Result.** Staging records a warning per event. `rpt.calculate_inventory` returns `reconciliation_required` for that product/location, with null on-hand, available and shortfall quantities. The simulated check answers `unknown`.
+  - **Not implemented.** The resolution path (a replacement snapshot or correction) is not implemented yet.
 - An immutable historical snapshot is not silently updated to repair an inconsistency. Record the problem and the replacement/correction decision.
 
 ## 11. Simulating the existing schedules
 
-These source jobs are separate from the integration pipeline. Their purpose is to reproduce the problem and its overnight behaviour.
+These source jobs are separate from the integration pipeline. Their purpose is to reproduce the problem and its overnight behaviour. They are in `workspace/db/source_jobs/`, and scenario files call them at their simulated times:
+
+- `src_stock.apply_local_movements` (hourly);
+- `src_stock.import_daily_transactions` (1 am);
+- `src_stock.create_midnight_snapshot`;
+- `src_online.refresh_website_stock` (5 am).
+
+All of them are safe to rerun except snapshot and copy creation, which refuse to overwrite an existing snapshot or copy ID.
 
 ### 11.1 Hourly central processing
 
@@ -681,13 +718,15 @@ For cutoff C at midnight:
 2. Create central movements using the original identities; ignore only confirmed equal duplicates.
 3. Apply previously unapplied movements to central current balances once.
 4. Produce the fixed snapshot at C from a previous reconciled opening snapshot and physical events in `[previous cutoff, C)`.
-5. Validate that the synthetic expected event set for that interval is covered.
+5. Validate that the synthetic expected event set for that interval is covered. The job raises an error if a till sale line or online collection/shipment in the interval was already recorded by the snapshot creation time but was not imported. An event recorded after the creation time genuinely cannot be included; it is left for integration to report as a late record (section 10.5).
+
+Codes are translated with central's own `product_barcode` and `external_location_code` tables (section 4.3). An untranslatable code stops the job with an error rather than guessing.
 
 Do not generate the midnight snapshot by copying a current quantity containing movements after midnight. Current-balance application and cutoff reconstruction are related but distinct computations. Bootstrap the first fixture with an explicit known reconciled opening snapshot and matching starting current balances.
 
 ### 11.3 Website refresh at 5 am
 
-Copy the designated midnight snapshot into a new `web_stock_copy` refresh. Recompute website availability using that cutoff, all still-active reservations, and online collections after that cutoff. A reservation from yesterday survives. A collection between midnight and 5 am is deducted even though it preceded the copy operation.
+Copy the designated midnight snapshot into a new `web_stock_copy` refresh. Translate central codes to website pickup codes with `src_stock.external_location_code`. Recompute website availability using that cutoff, all still-active reservations, and online collections after that cutoff. A reservation from yesterday survives. A collection between midnight and 5 am is deducted even though it preceded the copy operation.
 
 ## 12. Loading, audit and publication
 
@@ -695,13 +734,14 @@ Copy the designated midnight snapshot into a new `web_stock_copy` refresh. Recom
 
 | Table | Grain and fields |
 | --- | --- |
-| `load_run` | PK `load_run_id`; `scenario_code`, `source_as_of_at`, actual `started_at`, nullable `finished_at`/`published_at`, optional `scenario_published_at`, `status`, code revision, mapping revision, summary error |
+| `load_run` | PK `load_run_id`; `run_code` (checkpoint label, unique per scenario), `scenario_code`, `source_as_of_at`, actual `started_at`, nullable `finished_at`/`published_at`, nullable `publication_sequence` (from sequence `audit.publication_sequence`), optional `scenario_published_at`, `status`, code revision, mapping revision, summary error |
 | `source_extract` | PK `(load_run_id, system_code, table_name)`; extraction start/end, source row count, raw row count, rejected count, status |
 | `record_lineage` | Generated PK; load/raw/target references described in section 8; `disposition` such as loaded, duplicate, supporting |
 | `data_quality_issue` | Generated PK; load ID, rule code, severity, raw/source reference, optional product/location codes, message, detected time, optional resolution note and resolving run |
 | `mapping_change` | Generated PK; mapping type/key, previous/new target, changed time, reason, revision |
+| `scenario_step` | Generated PK; scenario, step order, kind and code, description, `status` (`succeeded` or `expected_error`), error message. Test-harness log only, not business data |
 
-`load_run.status` is `running`, `succeeded`, `rejected`, or `failed`. `succeeded` requires a publication timestamp and successful required source manifests. Data validation errors produce `rejected`; execution/extraction errors produce `failed`.
+`load_run.status` is `running`, `succeeded`, `rejected`, or `failed`. `succeeded` requires a publication timestamp, a publication sequence and successful required source manifests. Data validation errors produce `rejected`; execution/extraction errors produce `failed`. Calculations compare `publication_sequence`, not run IDs, to decide which loads were published before another (section 9.2).
 
 ### 12.2 Load sequence
 
@@ -713,6 +753,19 @@ Copy the designated midnight snapshot into a new `web_stock_copy` refresh. Recom
 6. In one publication transaction, load dimensions, order lines, order-status events, stock movements, snapshots, website copies, and their lineage. Check equality before accepting duplicate business identities.
 7. Mark the run succeeded and publish it in the same transaction. Other sessions must not see a succeeded run without all its facts.
 8. Create requested report observations in a separate atomic report transaction, then publish that report run.
+
+`workspace/scripts/run_pipeline.py` owns this sequence. Each step calls one SQL routine (paths relative to `workspace/`):
+
+| Step | Routine | File |
+| --- | --- | --- |
+| 1 | `audit.start_load_run` | `db/etl/load_control.sql` |
+| 2 | `raw.extract_sources`, in a `REPEATABLE READ` transaction | `db/etl/extract_sources.sql` |
+| 3–4 | `stg.validate_sources`, then `stg.prepare_staging` | `db/etl/validate_sources.sql`, `db/etl/prepare_staging.sql` |
+| 5 | `audit.reject_load_run` or `audit.fail_load_run` | `db/etl/load_control.sql` |
+| 6–7 | `dw.load_warehouse`, which also marks the run succeeded | `db/etl/load_warehouse.sql` |
+| 8 | `rpt.save_report_observations` | `db/etl/save_report_observations.sql` |
+
+All transformation logic is in these SQL files; Python only chooses the transaction boundaries.
 
 If warehouse loading fails, roll back its facts and lineage, retain the committed raw data, and record failure in a separate transaction. A report failure does not erase a valid warehouse load; it prevents that report run from becoming ready.
 
@@ -729,9 +782,27 @@ For future physically separate source databases, a single database snapshot cann
 | `calculate_inventory` | Observation time, published load ID | Integrated product/location quantities and quality status |
 | `calculate_website_inventory` | Observation time, published load ID | Website-copy-based quantity and selected copy metadata |
 | `allocate_order_stock` | Observation time, published load ID | Active C&C order lines with allocation and shortfall |
-| `check_availability` | Observation time, published load ID, pickup location, requested SKU/quantity lines | Per-line answer and overall `sufficient`, `insufficient`, or `unknown` |
+| `check_availability` | Observation time, load ID, pickup location code with its source system (default `online`, for example `store-parramatta`), requested lines as a JSON array of `{"sku", "quantity"}` | Per-line answer and overall `sufficient`, `insufficient`, or `unknown` |
 
-Choose the SQL parameter representation for request lines when implementing the function (a typed input table or validated JSON array are both workable). This does not change the business contract. Aggregate duplicate requested SKUs before checking; require positive integer quantities and a store location.
+Request lines are a validated JSON array, and the pickup location is given in the website's own code, as the website would send it. The function maps that code through `ref.location_identifier`. Aggregate duplicate requested SKUs before checking. An empty or malformed request, a non-positive quantity or a DC pickup location raises an error. An unknown location or product returns `unknown`.
+
+The overall answer is decided in this order:
+
+1. If any line is known to be short, the answer is `insufficient`, because the order cannot be covered whatever the unknown lines hold.
+2. Otherwise, if any line is unknown, the answer is `unknown`.
+3. Otherwise, the answer is `sufficient`.
+
+`rpt.record_stock_check` runs the check and saves its answer as evidence (section 13.2).
+
+Shared helper routines keep the eligibility and status rules in one place:
+
+| Routine | Purpose |
+| --- | --- |
+| `rpt.visible_load_runs` | Succeeded runs published no later than the selected run |
+| `rpt.assert_observation_allowed` | Rejects an observation later than the selected load's checkpoint |
+| `rpt.effective_order_status` | One effective status per order at the observation time |
+| `raw.source_tables` | The 19 required source tables |
+| `dw.sydney_date_key` | Sydney business date key for an instant |
 
 `check_availability` reads the inventory calculation, writes no operational order, and reports its observation/load basis. It returns `unknown` for missing openings, unresolved calculation errors, or an explicitly requested failed/current checkpoint. It must not silently fall back to an older successful run and present that as current availability.
 
@@ -739,9 +810,12 @@ Choose the SQL parameter representation for request lines when implementing the 
 
 | Table | Grain and key fields |
 | --- | --- |
-| `report_run` | PK `report_run_id`; FK `load_run_id`, `scenario_code`, `observed_at`, actual `created_at`, `status` (`building`, `ready`, `failed`), calculation revision |
-| `inventory_observation` | PK `(report_run_id, product_key, location_key)`; selected snapshot/copy keys, opening/movement/on-hand/reserved/available/shortfall quantities, website available quantity, difference, quality status |
-| `order_line_observation` | PK `(report_run_id, order_line_key)`; effective status event key, status, requested/allocated/shortfall quantities where applicable, nullable cancellation reason/time |
+| `report_run` | PK `report_run_id`; FK `load_run_id`, `scenario_code`, `checkpoint_code` (unique per scenario, for example `cp_d1_1500` or the later reconstruction `cp_hist_d1_1500`), `observed_at`, actual `created_at`, `status` (`building`, `ready`, `failed`), calculation revision |
+| `inventory_observation` | PK `(report_run_id, product_key, location_key)`; selected snapshot/copy keys, opening/movement/on-hand/reserved/available/shortfall quantities, quality status; website basis (copy ID, copied cutoff and copy time, copied on hand, online fulfilments since the cutoff, website reserved), website available quantity, website quality status, difference |
+| `order_line_observation` | PK `(report_run_id, order_line_key)`; effective status event key, status, requested/allocated/shortfall quantities where applicable, `is_at_risk`, nullable cancellation reason/time |
+| `stock_check`, `stock_check_line` | One saved simulated check (scenario, check code, load run, observation time, pickup code and canonical location, request, overall result, load status) and its per-SKU answers. Evidence only; not an order |
+
+The website basis is saved beside the integrated result. A reader can then see exactly why the website showed its number at that moment (copied balance − its own collections − its own reservations), without recalculating.
 
 Save observations atomically and expose only ready report runs. Include all accepted C&C lines known at that observation, including cancelled/collected lines. Allocation fields for inactive orders are null rather than implying they were allocated zero while active. Cancellation reason and time refer to the effective history, not a later source state.
 
@@ -753,9 +827,10 @@ Saved observations preserve what a particular calculation actually returned. Rec
 | --- | --- |
 | `v_availability_comparison` | Report/run time, product, location, website quantity, calculated on hand, reserved, available, shortfall, difference, opening/copy basis, quality status |
 | `v_order_risk_and_cancellation` | Report/run time, order/line, product, pickup store, effective status, required quantity, allocation, line shortfall, cancellation reason/time |
-| `v_data_update_delay` | Source identity, event time, original source recording time, first warehouse load/publication time, extraction/runtime details, scenario-delay label where used, website cutoff/copy/observation times |
+| `v_data_update_delay` | Event panel: source identity, event time, original source recording time, first warehouse load/publication time, extraction/runtime details, simulated delay with its label |
+| `v_website_stock_age` | Website panel: snapshot cutoff, copy time and observation time per ready report run, with basis age, copy age and copy lag |
 
-The delay output may have separate event-delay and website-age panels. Do not force unlike measures into a single unlabeled duration or join every movement to every website copy. Define website basis age as `observed_at - snapshot_cutoff_at`, copy age as `observed_at - copied_at`, and copy lag as `copied_at - snapshot_cutoff_at`.
+The delay output has separate event-delay and website-age panels, implemented as the two views above. Do not force unlike measures into a single unlabeled duration or join every movement to every website copy. Define website basis age as `observed_at - snapshot_cutoff_at`, copy age as `observed_at - copied_at`, and copy lag as `copied_at - snapshot_cutoff_at`.
 
 Use calculation quality codes `valid`, `missing_opening`, `negative_on_hand`, and `reconciliation_required`. Website comparison additionally records `website_quality_status` as `valid` or `missing_copy`. Missing or invalid integrated evidence prevents a sufficient/insufficient answer; a missing website copy prevents comparison but does not by itself invalidate an otherwise complete integrated answer. Preserve known diagnostics, leave quantities that cannot be established null, and never convert those nulls to zero for display. Store both quality fields in `inventory_observation`.
 
@@ -767,9 +842,31 @@ Display the most recent rejected/failed run and its issue count alongside the la
 
 The initial runner executes one scenario in a project database at a time. Start each independent scenario from a clean, project-scoped fixture state. Baseline and improved Case 1 are separate executions; do not load both outcomes into one order history.
 
-Keep checkpoints and repeated loads within an execution so overnight behaviour and replay are testable. Before resetting for another scenario, export the report observations, validation results, and relevant source evidence to scenario-named files. Reset must be explicit, limited to project objects, and prohibited against an unverified shared database. A second isolated project database is an alternative if the lab permits it.
+Keep checkpoints and repeated loads within an execution so overnight behaviour and replay are testable. Reset must be explicit, limited to project objects, and prohibited against an unverified shared database.
+
+**Implemented isolation.** Each scenario runs in its own database, `pethaven_test_<scenario>`, on the lab PostgreSQL server. The lab user `student` is a superuser, so the runner can create these databases.
+
+- **Reset scope.** The runner drops and recreates only databases with that prefix, and only on a local lab host (`postgres`, `localhost` or `127.0.0.1`). It refuses any other name or host, so the lab's `lab` database and shared databases such as the team's Supabase project are never reset.
+- **Evidence is kept.** Rebuilding one scenario does not affect another, and every scenario database stays available for inspection after a run.
+- **Exports.** `workspace/scripts/export_reports.py` writes each scenario's reports, checks and issues to scenario-named CSV files in `workspace/reports/<scenario>/`.
 
 `scenario_code` in audit/report records labels an execution; it is not a partition key that makes mixed source scenarios safe. Supporting simultaneous scenarios would require additional isolation throughout the model.
+
+**Scenario dates.** All scenarios use Wednesday 16 and Thursday 17 September 2026, Sydney time. These dates fall before daylight saving starts on 4 October 2026, so no scenario crosses a time-zone change.
+
+**Scenario file format.** A scenario is a plain SQL file in `workspace/db/seed/`, divided by directive comments that `workspace/scripts/run_scenario.py` reads:
+
+| Directive | Meaning |
+| --- | --- |
+| `-- @include <file>` | Insert another seed file, for example the shared `base_sources.sql` or `case_1_common.sql` |
+| `-- @step <code> \| <description>` | The SQL below runs as one transaction (a business action or source job) |
+| `-- @expect_error <code> \| <description>` | The SQL below must fail and is rolled back; the rejection is logged in `audit.scenario_step` |
+| `-- @checkpoint <code> \| <time> \| <description> [\| <JSON options>]` | Run a full load as of `<time>`, then save report observations at `<time>` |
+| `-- @observe <code> \| <time> \| <load code> \| <description>` | Save observations at `<time>` using an earlier or later load (a reconstruction) |
+| `-- @check <code> \| <time> \| <pickup code> \| <JSON request> \| <description>` | Simulated stock check with the most recent load; creates no order |
+| `-- @focus <SKU>@<location>` | Product/location printed at each checkpoint during a demonstration |
+
+Because the steps run in order, a source never contains records from a later scenario action at an earlier checkpoint (section 9.1).
 
 ### 14.2 Case 1 checkpoints
 
@@ -789,84 +886,124 @@ The improved run checks Sarah's proposed quantity against zero available and rep
 
 ### 14.3 Required checks
 
-| ID | Check | Expected result |
-| --- | --- | --- |
-| T01 | Case 1 baseline | Every checkpoint above matches; 1 am and 5 am remain distinct |
-| T02 | Case 1 improved | Sarah's proposed request is insufficient; no accepted order is created |
-| T03 | Case 2 from Spec | Till sale leaves zero on hand; later accepted commitment creates shortfall until cancellation |
-| T04 | Collection | On hand and reservation each fall by q; available does not increase because of collection |
-| T05 | Cancellation | Reservation falls; on hand is unchanged; history remains queryable |
-| T06 | Supplier receipt | Only receiving DC stock increases |
-| T07 | Transfer | Dispatch reduces origin only; destination increases only at receipt |
-| T08 | Overnight duplicate representation | Direct sale and imported central row produce one warehouse movement |
-| T09 | Repeat full load | Raw evidence grows; business-fact counts and stock results do not change |
-| T10 | Opening rollover | Events already covered by the new snapshot are excluded from subsequent movements |
-| T11 | Exact-midnight event | Excluded from opening snapshot; included once after its cutoff |
-| T12 | Overnight active order | Reservation survives the 5 am refresh |
-| T13 | Collection between midnight and 5 am | Deducted from the newly copied midnight opening; no reservation remains |
-| T14 | Unknown barcode/location | Issue retained; run not published; no optimistic current check |
-| T15 | Conflicting duplicate | Publication blocked with both raw references |
-| T16 | Missing opening snapshot | Unknown quantity; not zero and not sufficient |
-| T17 | Historical status | Earlier report still shows Sarah at risk after her later cancellation |
-| T18 | Knowledge boundary | A later-arriving event changes a new reconstruction, not an earlier saved observation |
-| T19 | Equal acceptance times | Order ID breaks allocation ties deterministically |
-| T20 | Multi-line request | Overall insufficient if any line lacks stock; no partial accepted order |
-| T21 | Failed publication | No partial warehouse load or ready report is visible |
-| T22 | Schedule rerun | Hourly/overnight source jobs do not apply a movement twice |
-| T23 | Data timing | Snapshot cutoff, creation, copy, event, and load times are shown separately |
-| T24 | Source completeness | Required extract counts reconcile; an omitted table blocks publication |
-| T25 | Pre-cutoff late record | Reconciliation issue; no automatic extra deduction after the cutoff |
-| T26 | Explicit correction | Original history remains; linked compensating event changes only eligible later observations, or unsupported correction is rejected visibly |
+| ID | Check | Expected result | Scenario (`workspace/db/seed/`) |
+| --- | --- | --- | --- |
+| T01 | Case 1 baseline | Every checkpoint above matches; 1 am and 5 am remain distinct | `case_1_baseline` |
+| T02 | Case 1 improved | Sarah's proposed request is insufficient; no accepted order is created | `case_1_improved` |
+| T03 | Case 2 from Spec | Till sale leaves zero on hand; later accepted commitment creates shortfall until cancellation | `case_2` |
+| T04 | Collection | On hand and reservation each fall by q; available does not increase because of collection | `movement_checks` |
+| T05 | Cancellation | Reservation falls; on hand is unchanged; history remains queryable | `movement_checks` |
+| T06 | Supplier receipt | Only receiving DC stock increases | `movement_checks` |
+| T07 | Transfer | Dispatch reduces origin only; destination increases only at receipt | `movement_checks` |
+| T08 | Overnight duplicate representation | Direct sale and imported central row produce one warehouse movement | `case_1_baseline` |
+| T09 | Repeat full load | Raw evidence grows; business-fact counts and stock results do not change | `case_1_baseline` |
+| T10 | Opening rollover | Events already covered by the new snapshot are excluded from subsequent movements | `case_1_baseline` |
+| T11 | Exact-midnight event | Excluded from opening snapshot; included once after its cutoff | `movement_checks` |
+| T12 | Overnight active order | Reservation survives the 5 am refresh | `case_1_baseline` |
+| T13 | Collection between midnight and 5 am | Deducted from the newly copied midnight opening; no reservation remains | `movement_checks` |
+| T14 | Unknown barcode/location | Issue retained; run not published; no optimistic current check | `unknown_identifier` |
+| T15 | Conflicting duplicate | Publication blocked with both raw references | `conflicting_duplicate` |
+| T16 | Missing opening snapshot | Unknown quantity; not zero and not sufficient | `movement_checks` |
+| T17 | Historical status | Earlier report still shows Sarah at risk after her later cancellation | `case_1_baseline` |
+| T18 | Knowledge boundary | A later-arriving event changes a new reconstruction, not an earlier saved observation | `movement_checks` |
+| T19 | Equal acceptance times | Order ID breaks allocation ties deterministically | `movement_checks` |
+| T20 | Multi-line request | Overall insufficient if any line lacks stock; no partial accepted order | `movement_checks` |
+| T21 | Failed publication | No partial warehouse load or ready report is visible | `failed_publication` |
+| T22 | Schedule rerun | Hourly/overnight source jobs do not apply a movement twice | `case_1_baseline` |
+| T23 | Data timing | Snapshot cutoff, creation, copy, event, and load times are shown separately | `case_1_baseline` |
+| T24 | Source completeness | Required extract counts reconcile; an omitted table blocks publication | `source_completeness` |
+| T25 | Pre-cutoff late record | Reconciliation issue; no automatic extra deduction after the cutoff | `pre_cutoff_late_record` |
+| T26 | Explicit correction | Original history remains; linked compensating event changes only eligible later observations, or unsupported correction is rejected visibly | `movement_checks` |
 
-Tests must assert quantities and affected record identities, not just that a query ran. Keep expected fixture results independent of the calculation being tested. These are acceptance criteria; no passing implementation is claimed here.
+Tests must assert quantities and affected record identities, not just that a query ran. Keep expected fixture results independent of the calculation being tested.
+
+**How the checks are run.**
+
+- **Expected values.** They are fixed in `workspace/tests/expected/<scenario>.csv` and were written from the Spec before the calculations were implemented.
+- **Actual values.** The read-only queries in `workspace/tests/sql/` only read saved observations, raw extracts and audit records; they never recalculate a quantity.
+- **One command.** `workspace/scripts/run_acceptance.py` rebuilds every scenario database from empty, runs the scenario and prints expected value, actual value and PASS/FAIL/SKIP for every check. It exits with a non-zero code if any check fails or is skipped.
+- **Results.** The latest results are in `workspace/tests/results/`, and the current status is summarised in [implementation_notes.md](implementation_notes.md).
+
+**Test hooks.** Three failure checks need controlled faults. Each is labelled in its scenario file, and no normal business step uses them:
+
+- `skip_tables` in `raw.extract_sources` omits a table (T24).
+- `fail_after_facts` in `dw.load_warehouse` raises after the facts are written (T21).
+- A direct `UPDATE` of one central imported movement simulates a faulty import (T15).
+
+Two synthetic events use unusual hours on purpose: a stock count at exactly 00:00 (T11) and a collection at 00:30 (T13). They test the cutoff rules and are not claims about trading hours.
 
 ## 15. Code organisation and implementation sequence
 
-### 15.1 Proposed files
+### 15.1 Files
 
-The following paths are planned files, not files created by this design document:
+The repository root holds the provided Lab Environment files, unchanged. All project code lives in `workspace/`, because `docker-compose.yml` mounts only `./workspace` into the Python container (as `/workspace`).
 
 ```text
-db/
-  01_schemas.sql
-  02_source_tables.sql
-  03_audit_tables.sql
-  04_raw_tables.sql
-  05_reference_tables.sql
-  06_staging_tables.sql
-  07_warehouse_tables.sql
-  08_reporting_objects.sql
-  source_jobs/
-    apply_local_movements.sql
-    import_daily_transactions.sql
-    create_midnight_snapshot.sql
-    refresh_website_stock.sql
-  etl/
-    extract_sources.sql
-    validate_sources.sql
-    prepare_staging.sql
-    load_warehouse.sql
-    save_report_observations.sql
-  seed/
-    reference_mappings.sql
-    case_1_baseline.sql
-    case_1_improved.sql
-    case_2.sql
-    movement_checks.sql
-scripts/
-  apply_schema.py
-  run_scenario.py
-  run_pipeline.py
-  export_reports.py
-tests/
-  sql/
-  expected/
+docker-compose.yml                    Lab Environment (course file, unchanged)
+python/
+  Dockerfile                          Lab Environment (course file, unchanged)
+  requirements.txt                    Lab Environment (course file, unchanged)
+workspace/                            mounted as /workspace
+  db/
+    01_schemas.sql
+    02_source_tables.sql
+    03_audit_tables.sql
+    04_raw_tables.sql
+    05_reference_tables.sql
+    06_staging_tables.sql
+    07_warehouse_tables.sql
+    08_reporting_objects.sql          calculations, saved observations, stock check, report views
+    source_actions/                   source write procedures (section 4)
+      store_sales_actions.sql
+      online_actions.sql
+      stock_actions.sql
+    source_jobs/                      existing schedules (section 11)
+      apply_local_movements.sql
+      import_daily_transactions.sql
+      create_midnight_snapshot.sql
+      refresh_website_stock.sql
+    etl/                              integration pipeline (section 12)
+      load_control.sql
+      extract_sources.sql
+      validate_sources.sql
+      prepare_staging.sql
+      load_warehouse.sql
+      save_report_observations.sql
+    seed/
+      reference_mappings.sql          reviewed location mappings (applied with the schema)
+      base_sources.sql                master data shared by every scenario
+      case_1_common.sql               Case 1 up to 2 pm, shared by baseline and improved
+      case_1_baseline.sql
+      case_1_improved.sql
+      case_2.sql
+      movement_checks.sql
+      unknown_identifier.sql
+      conflicting_duplicate.sql
+      failed_publication.sql
+      source_completeness.sql
+      pre_cutoff_late_record.sql
+  scripts/
+    pethaven_db.py                    lab connection and safe test-database handling
+    apply_schema.py
+    run_pipeline.py
+    run_scenario.py
+    run_acceptance.py                 one command: rebuild, run and check every scenario
+    export_reports.py
+  tests/
+    expected/                         fixed expected values per scenario (from the Spec)
+    sql/                              read-only queries returning actual values
+    results/                          latest acceptance results
+  reports/                            exported report CSV files per scenario
 docs/
   Architecture_and_Data_Model.md
+  implementation_notes.md             verification status and not-implemented items
+  traceability.md                     business rule -> SQL -> test mapping
   demo_runbook.md
+  supabase_backup.md                  optional, untested backup target
+data/                                 database files created by Docker (not in Git)
 ```
 
-Numbered creation files describe dependency order: schemas, sources, audit, raw, reference, staging, warehouse, reporting. Every executable file must follow the English comment and object-description requirements in section 3.4, including inputs, outputs, transaction boundary, and rerun behaviour. SQL transformations must be available as commented files; do not hide all logic inside Python or dashboard expressions.
+`apply_schema.py` applies the numbered creation files in dependency order: schemas, sources, audit, raw, reference, staging, warehouse, reporting. It then applies the source actions, source jobs, ETL routines and the reference seed. Python uses only libraries already installed in the lab image (`psycopg2` and the standard library). Every executable file must follow the English comment and object-description requirements in section 3.4, including inputs, outputs, transaction boundary, and rerun behaviour. SQL transformations must be available as commented files; do not hide all logic inside Python or dashboard expressions.
 
 ### 15.2 Build milestones
 
@@ -880,20 +1017,29 @@ Numbered creation files describe dependency order: schemas, sources, audit, raw,
 | 6. Complete verification | Case 2, failure/retry/correction checks, clean rebuild | One documented end-to-end run produces repeatable evidence |
 | 7. Submission materials | ERD, refined architecture image, rationale, trade-offs, demo recording | Design components map to executable files and visible results |
 
-### 15.3 Existing repository changes
+**Status on 1 October 2026:**
 
-- Replace the old inventory-unrelated source model and synthetic data deliberately; do not extend customer, pet, loyalty, or grooming tables into this design.
-- Reuse connection/configuration patterns where useful, but move the main SQL runner to a plain PostgreSQL connection. Core integration must not require Supabase-specific APIs.
-- Update `scripts/apply_schema.py`: its current discovery/reset logic targets prefixed objects in `public` and its expected-table detection assumes `public`. It is not suitable for the nine-schema design without revision.
-- Update the seed loader: its present reset/load behaviour targets the old source model. Do not run it against the new project unchanged.
-- Replace README instructions and inventory scope together when the first runnable milestone is ready. Keep the business Spec separate from operational setup instructions.
-- Preserve existing work through version control before any authorised migration or reset. This design is not an instruction to delete a shared database.
+- Milestones 1–6 are implemented, and `run_acceptance.py` passes for them.
+- Milestone 7 is open: no ERD, refined architecture image or demonstration recording yet.
+- [implementation_notes.md](implementation_notes.md) lists the remaining limitations.
+
+### 15.3 Existing repository changes (completed)
+
+These changes were made on 1 October 2026. Earlier work remains in Git history.
+
+- **Old model removed.** The customer/pet/grooming source model (`db/schema.sql`) and its synthetic data (`db/seed_sources.sql`) were removed, not extended.
+- **Supabase code removed.** The Supabase client (`src/db.py`), its scripts (`scripts/apply_schema.py`, `scripts/load_seed.py`, `scripts/test_connection.py`), the root `requirements.txt` and the empty `data/raw|cleaned|processed` folders were removed. Core integration uses a plain PostgreSQL connection and no Supabase-specific API.
+- **New scripts.** New scripts in `workspace/scripts/` replace the old ones. They manage only the nine project schemas inside isolated `pethaven_test_*` databases.
+- **Setup files updated.** README, `.env.example` and `.gitignore` were rewritten for the lab workflow. The business Spec stays separate from setup instructions.
+- **Shared database untouched.** No shared database was reset. The team's Supabase project may still contain the old customer/pet tables; removing them is a team decision ([supabase_backup.md](supabase_backup.md)).
 
 ## 16. Design rationale and trade-offs
 
 | Choice | Benefit | Cost or limit |
 | --- | --- | --- |
 | One database, three source schemas | Easy lab joins, consistent extraction, distinct source ownership | Does not reproduce cross-server connectivity and distributed failures |
+| One isolated database per scenario | Baseline and improved runs cannot mix; any scenario can be rebuilt without touching another or a shared database | Needs permission to create databases (available in the lab); cross-scenario reports need an export |
+| Existing website check reproduced in the online source | The baseline shows why Sarah's order was accepted, using the website's own outdated formula | The source and warehouse treat a missing website copy differently (zero versus unknown), on purpose |
 | Raw evidence separate from sources | Replays, debugging, and extraction provenance | More stored rows than loading straight into facts |
 | Full checkpoint extraction | Simple completeness checks and retries for small fixtures | Needs replacement for a larger production workload |
 | One canonical event per physical change | Prevents double stock deductions | Requires reliable original event references and conflict handling |
@@ -917,24 +1063,34 @@ The design's database depth comes from correct grains, relationships, temporal r
 | Rationale and trade-offs | Section 16 |
 | At least three sources | `src_store_sales`, `src_online`, `src_stock` and their independent business actions |
 | At least one integrated warehouse | `dw` dimensions and facts |
-| Commented executable SQL and synthetic data | Section 15 file plan and section 14 fixtures |
-| At least three reports/dashboard outputs | Section 13.3 |
-| End-to-end test and recorded demonstration | Section 14 acceptance checks and section 15 milestones |
+| Commented executable SQL and synthetic data | Section 15.1 files in `workspace/db/` and the section 14 scenarios |
+| At least three reports/dashboard outputs | Section 13.3 views; CSV exports from `export_reports.py` |
+| End-to-end test and recorded demonstration | `run_acceptance.py` (section 14.3); demonstration steps in [demo_runbook.md](demo_runbook.md); recording not yet made |
 | Team contribution evidence and meeting minutes | Record actual work/meetings alongside implementation; do not infer contributions from this design |
 
-### 17.2 Information still needed
+### 17.2 Decisions made and items still open
 
-The business architecture can be reviewed and implemented without further business-case information. The following choices need resolution at the stated stage:
+Decided during implementation:
 
-| Item | Current working position | When needed |
-| --- | --- | --- |
-| Accepted execution environment | Use the provided lab setup; original configuration and tutor interpretation remain unverified | Before provisioning or final deployment instructions |
-| Database/schema permissions and versions | PostgreSQL dialect; separate schemas within one project database | Before executable DDL is finalised |
-| Reporting interface | Three SQL-backed outputs; framework undecided | After the report contracts work in SQL |
-| Scenario dates and fixture size | Use explicit Sydney dates, several processing days, and a small product/location set | Before seed scripts; dates should avoid accidental DST ambiguity or explicitly test it |
-| Team responsibilities | Not assigned by this document | Before dividing implementation work |
+| Item | Decision |
+| --- | --- |
+| Execution environment | The provided Lab Environment, unchanged; code in `workspace/` (sections 1.2 and 15.1) |
+| Database version and permissions | PostgreSQL 15.18; lab user `student` is a superuser, so isolated scenario databases are used (section 14.1) |
+| Scenario dates and fixture size | 16–17 September 2026, Sydney time, before daylight saving; 3 products and 3 stores (one more of each in the T14 scenario) plus one DC; nine scenarios (section 14) |
+| Code translation in the existing jobs | Central's own `src_stock.external_location_code` (section 4.3) |
+| Website order acceptance | Reproduced with the website's own formula in `src_online.place_order` (section 4.2) |
+| Pre-cutoff late records | Warning plus a pair-level `reconciliation_required` result (sections 6 and 10.5) |
+| Supabase | Optional backup target only; not part of the tested workflow ([supabase_backup.md](supabase_backup.md)) |
 
-The user/team should review the proposed table contract, full checkpoint extraction, whole-load validation policy, and scenario isolation as design choices. They are implementation recommendations derived from the Spec, not additional business facts. Environment uncertainty does not require reopening the agreed stock definitions.
+Still open:
+
+| Item | Current position |
+| --- | --- |
+| Graphical dashboard | Reports are SQL views with CSV export; a dashboard tool is not chosen |
+| ERD, refined architecture image, demonstration recording | Not produced yet (milestone 7) |
+| Team responsibilities | Not assigned by this document |
+
+The table contract, full checkpoint extraction, whole-load validation policy and scenario isolation are implementation choices derived from the Spec, not additional business facts.
 
 ### 17.3 Later image revision
 

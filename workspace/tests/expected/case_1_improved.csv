@@ -1,0 +1,14 @@
+test_id,check_name,expected,spec_reference,description
+T02,cp_d1_1400/PH-10231@STR-PAR/website_available,4,Spec 7.3 step 1,Website still calculates four available
+T02,cp_d1_1400/PH-10231@STR-PAR/on_hand,1,Spec 7.3 step 1,Integrated calculation: one on hand
+T02,cp_d1_1400/PH-10231@STR-PAR/reserved,1,Spec 7.3 step 1,Minus A's reservation
+T02,cp_d1_1400/PH-10231@STR-PAR/available,0,Spec 7.3 step 1,Equals zero available
+T02,cp_d1_1500/PH-10231@STR-PAR/website_available,4,Spec 7.3 step 2,Without Sarah's order the website still says four
+T02,cp_d1_1500/PH-10231@STR-PAR/available,0,Spec 7.3 step 2,
+T02,cp_d1_1500/PH-10231@STR-PAR/shortfall,0,Spec 7.3 step 2,No second commitment exists
+T02,chk_sarah_1500/overall_result,insufficient,Spec 7.3 step 2,Simulated check reports insufficient stock at Parramatta
+T02,chk_sarah_1500/PH-10231/requested_quantity,1,Spec 7.3 step 2,
+T02,chk_sarah_1500/PH-10231/available_quantity,0,Spec 7.3 step 2,
+T02,chk_sarah_1500/PH-10231/line_result,insufficient,Spec 7.3 step 2,
+T02,final/web_order_count,1,Arch 14.2,Only Customer A's order exists
+T02,final/sarah_order_exists,false,Arch 14.2,The simulated check creates no accepted order

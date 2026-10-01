@@ -1,0 +1,5 @@
+checkpoint_code,observed_at,order_id,line_id,placed_at,sku,pickup_location_code,effective_status,requested_quantity,allocated_quantity,line_shortfall_quantity,is_at_risk,cancellation_reason,cancelled_at,is_stock_related_cancellation
+cp_d1_1800,2026-09-16 18:00:00+10:00,W-2001,1,2026-09-16 18:00:00+10:00,PH-10231,STR-PAR,awaiting_pick,1,0,1,True,,,
+cp_d2_0100,2026-09-17 01:00:00+10:00,W-2001,1,2026-09-16 18:00:00+10:00,PH-10231,STR-PAR,awaiting_pick,1,0,1,True,,,
+cp_d2_0500,2026-09-17 05:00:00+10:00,W-2001,1,2026-09-16 18:00:00+10:00,PH-10231,STR-PAR,awaiting_pick,1,0,1,True,,,
+cp_d2_0900,2026-09-17 09:00:00+10:00,W-2001,1,2026-09-16 18:00:00+10:00,PH-10231,STR-PAR,cancelled,1,,,,insufficient_stock,2026-09-17 09:00:00+10:00,True

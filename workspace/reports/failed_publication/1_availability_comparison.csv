@@ -1,0 +1,2 @@
+checkpoint_code,observed_at,load_run_code,sku,product_name,location_code,website_available_quantity,calculated_on_hand_quantity,reserved_quantity,available_quantity,shortfall_quantity,availability_difference,difference_direction,opening_cutoff_at,website_snapshot_cutoff_at,website_copied_at,quality_status,website_quality_status
+f_d1_1200,2026-09-16 12:00:00+10:00,f_d1_1200,PH-10231,Royal Canin Medium Adult Dry Dog Food,STR-PAR,,4,0,4,0,,,2026-09-16 00:00:00+10:00,,,valid,missing_copy

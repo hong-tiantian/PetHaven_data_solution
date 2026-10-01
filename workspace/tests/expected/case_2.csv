@@ -1,0 +1,36 @@
+test_id,check_name,expected,spec_reference,description
+T03,cp_d1_0500/PH-10231@STR-PAR/website_available,1,Spec 6 Case 2 row 1,Website copies one bag
+T03,cp_d1_0500/PH-10231@STR-PAR/on_hand,1,Spec 6 Case 2 row 1,
+T03,cp_d1_0500/PH-10231@STR-PAR/reserved,0,Spec 6 Case 2 row 1,
+T03,cp_d1_0500/PH-10231@STR-PAR/available,1,Spec 6 Case 2 row 1,
+T03,cp_d1_0500/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 2 row 1,
+T03,cp_d1_1400/PH-10231@STR-PAR/website_available,1,Spec 6 Case 2 row 2,Walk-in till sale is invisible to the website
+T03,cp_d1_1400/PH-10231@STR-PAR/on_hand,0,Spec 6 Case 2 row 2,
+T03,cp_d1_1400/PH-10231@STR-PAR/reserved,0,Spec 6 Case 2 row 2,
+T03,cp_d1_1400/PH-10231@STR-PAR/available,0,Spec 6 Case 2 row 2,
+T03,cp_d1_1400/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 2 row 2,
+T03,cp_d1_1800/PH-10231@STR-PAR/website_available,0,Spec 6 Case 2 row 3,Online C&C order accepted
+T03,cp_d1_1800/PH-10231@STR-PAR/on_hand,0,Spec 6 Case 2 row 3,
+T03,cp_d1_1800/PH-10231@STR-PAR/reserved,1,Spec 6 Case 2 row 3,
+T03,cp_d1_1800/PH-10231@STR-PAR/available,0,Spec 6 Case 2 row 3,
+T03,cp_d1_1800/PH-10231@STR-PAR/shortfall,1,Spec 6 Case 2 row 3,Accepted commitment exceeds on hand
+T03,cp_d1_1800/W-2001-1/line_shortfall,1,Spec 7.4 output 2,The order is at risk
+T03,cp_d1_1800/W-2001-1/allocated,0,Spec 7.4 output 2,
+T03,cp_d2_0100/PH-10231@STR-PAR/central_recorded_on_hand,0,Spec 6 Case 2 row 4,Central imports the till sale
+T03,cp_d2_0100/PH-10231@STR-PAR/website_available,0,Spec 6 Case 2 row 4,
+T03,cp_d2_0100/PH-10231@STR-PAR/on_hand,0,Spec 6 Case 2 row 4,
+T03,cp_d2_0100/PH-10231@STR-PAR/reserved,1,Spec 6 Case 2 row 4,
+T03,cp_d2_0100/PH-10231@STR-PAR/available,0,Spec 6 Case 2 row 4,
+T03,cp_d2_0100/PH-10231@STR-PAR/shortfall,1,Spec 6 Case 2 row 4,
+T03,cp_d2_0500/PH-10231@STR-PAR/website_available,0,Spec 6 Case 2 row 5,Refresh to zero does not resolve the commitment
+T03,cp_d2_0500/PH-10231@STR-PAR/on_hand,0,Spec 6 Case 2 row 5,
+T03,cp_d2_0500/PH-10231@STR-PAR/reserved,1,Spec 6 Case 2 row 5,
+T03,cp_d2_0500/PH-10231@STR-PAR/available,0,Spec 6 Case 2 row 5,
+T03,cp_d2_0500/PH-10231@STR-PAR/shortfall,1,Spec 6 Case 2 row 5,
+T03,cp_d2_0900/PH-10231@STR-PAR/website_available,0,Spec 6 Case 2 row 6,Staff cancels the order
+T03,cp_d2_0900/PH-10231@STR-PAR/on_hand,0,Spec 6 Case 2 row 6,
+T03,cp_d2_0900/PH-10231@STR-PAR/reserved,0,Spec 6 Case 2 row 6,
+T03,cp_d2_0900/PH-10231@STR-PAR/available,0,Spec 6 Case 2 row 6,
+T03,cp_d2_0900/PH-10231@STR-PAR/shortfall,0,Spec 6 Case 2 row 6,
+T03,cp_d2_0900/W-2001-1/effective_status,cancelled,Spec 6 Case 2 row 6,
+T03,cp_d2_0900/W-2001-1/cancellation_reason,insufficient_stock,Spec 4.2 activity C,

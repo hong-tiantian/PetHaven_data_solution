@@ -1,0 +1,9 @@
+test_id,check_name,expected,spec_reference,description
+T25,l_d2_0300/load_status,succeeded,Arch 10.5,A late record is a reconciliation warning rather than a load error
+T25,l_d2_0300/issue_count/pre_cutoff_late_event,1,Arch 10.5,
+T25,l_d2_0300/PH-10231@STR-PAR/quality_status,reconciliation_required,Arch 10.5,
+T25,l_d2_0300/PH-10231@STR-PAR/on_hand,NULL,Arch 10.5,No automatic deduction after the cutoff
+T25,l_d2_0300/PH-10231@STR-PAR/available,NULL,Arch 10.5,
+T25,chk_par_rc_0300/overall_result,unknown,Arch 13.1,
+T25,l_d2_0300/PH-10231@STR-CHA/quality_status,valid,Arch 10.5,Unaffected pair remains valid
+T25,l_d2_0300/PH-10231@STR-CHA/on_hand,8,Arch 10.5,
